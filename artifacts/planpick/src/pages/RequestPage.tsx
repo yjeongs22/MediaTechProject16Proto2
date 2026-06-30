@@ -69,7 +69,7 @@ export default function RequestPage() {
 
   return (
     <div className="min-h-full bg-[#F4F2FF] px-6 py-6 md:px-10 lg:px-14">
-      <div className="mx-auto w-full max-w-[1120px]">
+      <div className="mx-auto w-full max-w-[980px]">
         <div className="mb-5 flex items-center gap-5">
           <button
             type="button"
@@ -85,7 +85,7 @@ export default function RequestPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-[24px] bg-white/92 px-7 py-8 shadow-[0_14px_35px_rgba(42,33,95,0.08)] ring-1 ring-[#ECEAF5] backdrop-blur md:px-10"
+          className="rounded-[24px] bg-white/92 px-7 py-8 shadow-[0_14px_35px_rgba(42,33,95,0.08)] ring-1 ring-[#ECEAF5] backdrop-blur md:px-9"
         >
           <div className="mb-8">
             <h1 className="text-[36px] font-black leading-tight text-black md:text-[42px]">기본 정보 입력</h1>
@@ -94,7 +94,7 @@ export default function RequestPage() {
             </p>
           </div>
 
-          <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
+          <div className="grid gap-x-5 gap-y-5 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-[15px] font-black text-black">학교</label>
               <input
