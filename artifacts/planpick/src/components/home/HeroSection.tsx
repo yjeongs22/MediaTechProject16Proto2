@@ -25,7 +25,7 @@ export function HeroSection() {
         </span>
       </h1>
       
-      <p className="text-muted-foreground text-lg mb-8 max-w-[400px] leading-relaxed">
+      <p className="text-muted-foreground text-lg mb-8 max-w-[400px] leading-relaxed" style = {{ fontFamily: "PlanPickPretendardS", fontWeight: 500 }}>
         AI가 당신의 졸업요건과 선호도를 분석하여<br />
         최적의 시간표를 추천해드려요.
       </p>
