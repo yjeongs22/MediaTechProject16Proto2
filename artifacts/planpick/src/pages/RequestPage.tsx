@@ -64,7 +64,7 @@ export default function RequestPage() {
   }
 
   const inputClass =
-    "h-[54px] w-full rounded-[18px] border border-[#D8D8E0] bg-white px-5 text-[15px] font-bold text-slate-900 outline-none transition-all placeholder:text-[#A1A5B4] focus:border-[#6D5DF4] focus:ring-4 focus:ring-[#6D5DF4]/10";
+    "h-12 w-full rounded-2xl border border-[#D8D8E0] bg-white px-4 text-[14px] font-bold text-slate-900 outline-none transition-all placeholder:text-[#A1A5B4] focus:border-[#6D5DF4] focus:ring-4 focus:ring-[#6D5DF4]/10";
   const errorInputClass = "border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-100";
 
   return (
@@ -85,7 +85,7 @@ export default function RequestPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-[28px] bg-white/92 px-8 py-10 shadow-[0_14px_35px_rgba(42,33,95,0.08)] ring-1 ring-[#ECEAF5] backdrop-blur md:px-14"
+          className="rounded-[28px] bg-white/92 px-8 py-9 shadow-[0_14px_35px_rgba(42,33,95,0.08)] ring-1 ring-[#ECEAF5] backdrop-blur md:px-12"
         >
           <div className="mb-10">
             <h1 className="text-[44px] font-black leading-tight text-black md:text-[52px]">기본 정보 입력</h1>
@@ -94,7 +94,7 @@ export default function RequestPage() {
             </p>
           </div>
 
-          <div className="grid gap-x-7 gap-y-8 md:grid-cols-2">
+          <div className="grid gap-x-6 gap-y-7 md:grid-cols-2">
             <div>
               <label className="mb-2.5 block text-[18px] font-black text-black">학교</label>
               <input
@@ -148,7 +148,7 @@ export default function RequestPage() {
             </div>
           </div>
 
-          <div className="mt-9">
+          <div className="mt-8">
             <label className="mb-2.5 block text-[18px] font-black text-black">이번 학기 목표 학점</label>
             <select
               value={targetCredit}
@@ -163,7 +163,7 @@ export default function RequestPage() {
               ))}
             </select>
 
-            <div className="mt-7 rounded-[20px] border border-[#E4E1F0] bg-[#F8F5FF] px-7 py-5">
+            <div className="mt-6 rounded-[20px] border border-[#E4E1F0] bg-[#F8F5FF] px-6 py-5">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-[28px] font-black text-[#6B5DF6]">{creditValue}학점</span>
                 <span className="text-[18px] font-black text-[#9699A8]">1-{overToggle ? "40" : "21"}학점</span>
