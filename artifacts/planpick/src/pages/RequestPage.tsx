@@ -3,6 +3,8 @@ import { useLocation } from "wouter";
 import { setCurrentRequestId, setData, type StudentInfo } from "@/lib/storage";
 import { ArrowLeft, ImagePlus, X } from "lucide-react";
 
+const gradeOptions = ["1학년", "2학년", "3학년", "4학년", "졸업유예"];
+
 export default function RequestPage() {
   const [, setLocation] = useLocation();
   const [school, setSchool] = useState("");
@@ -10,16 +12,13 @@ export default function RequestPage() {
   const [studentNumber, setStudentNumber] = useState("");
   const [grade, setGrade] = useState("");
   const [targetCredit, setTargetCredit] = useState(18);
-  const [overToggle, setOverToggle] = useState(false);
-  const [overCredit, setOverCredit] = useState(22);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [timetableImages, setTimetableImages] = useState<string[]>([]);
   const [imageStatus, setImageStatus] = useState<"idle" | "analyzing" | "complete">("idle");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const creditValue = overToggle ? overCredit : targetCredit;
-  const rangeProgress = `${((Math.min(Math.max(targetCredit, 1), 21) - 1) / 20) * 100}%`;
+  const rangeProgress = `${((targetCredit - 1) / 20) * 100}%`;
 
   function handleImageFiles(files: FileList | File[]) {
     const imageFiles = Array.from(files).filter((file) => file.type.startsWith("image/"));
@@ -28,7 +27,7 @@ export default function RequestPage() {
     setImageStatus("analyzing");
     imageFiles.forEach((file) => {
       const reader = new FileReader();
-      reader.onload = (e) => setTimetableImages((prev) => [...prev, e.target?.result as string]);
+      reader.onload = (event) => setTimetableImages((prev) => [...prev, String(event.target?.result || "")]);
       reader.readAsDataURL(file);
     });
     window.setTimeout(() => setImageStatus("complete"), 5000);
@@ -41,18 +40,18 @@ export default function RequestPage() {
   }
 
   function validate() {
-    const e: Record<string, string> = {};
-    if (!school.trim()) e.school = "학교를 입력해주세요";
-    if (!major.trim()) e.major = "학과를 입력해주세요";
-    if (!grade.trim()) e.grade = "학년을 입력해주세요";
-    return e;
+    const nextErrors: Record<string, string> = {};
+    if (!school.trim()) nextErrors.school = "학교를 입력해 주세요.";
+    if (!major.trim()) nextErrors.major = "학과를 입력해 주세요.";
+    if (!grade.trim()) nextErrors.grade = "학년을 선택해 주세요.";
+    return nextErrors;
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
+    const nextErrors = validate();
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
       return;
     }
 
@@ -61,7 +60,7 @@ export default function RequestPage() {
       major,
       studentNumber,
       grade,
-      targetCredit: creditValue,
+      targetCredit,
     };
 
     setData("planpickStudent", student);
@@ -138,34 +137,29 @@ export default function RequestPage() {
 
             <div>
               <label className="mb-2 block text-[15px] font-black text-black">학년</label>
-              <input
-                data-testid="input-grade"
+              <select
+                data-testid="select-grade"
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
-                placeholder="예) 3학년"
                 className={`${inputClass} ${errors.grade ? errorInputClass : ""}`}
-              />
+              >
+                <option value="">학년 선택</option>
+                {gradeOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
               {errors.grade && <p className="mt-2 text-sm font-bold text-red-500">{errors.grade}</p>}
             </div>
           </div>
 
           <div className="mt-6">
             <label className="mb-2 block text-[15px] font-black text-black">이번 학기 목표 학점</label>
-            <input
-              type="number"
-              min={1}
-              max={40}
-              value={targetCredit}
-              onChange={(e) => setTargetCredit(Number(e.target.value))}
-              disabled={overToggle}
-              placeholder="예) 18학점"
-              className={`${inputClass} disabled:opacity-55`}
-            />
-
-            <div className="mt-5 rounded-[18px] border border-[#E4E1F0] bg-[#F8F5FF] px-5 py-4">
+            <div className="mt-3 rounded-[18px] border border-[#E4E1F0] bg-[#F8F5FF] px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-[22px] font-black text-[#6B5DF6]">{creditValue}학점</span>
-                <span className="text-[15px] font-black text-[#9699A8]">1-{overToggle ? "40" : "21"}학점</span>
+                <span className="text-[22px] font-black text-[#6B5DF6]">{targetCredit}학점</span>
+                <span className="text-[15px] font-black text-[#9699A8]">1-21학점</span>
               </div>
 
               <input
@@ -173,46 +167,11 @@ export default function RequestPage() {
                 type="range"
                 min={1}
                 max={21}
-                value={Math.min(Math.max(targetCredit, 1), 21)}
-                disabled={overToggle}
+                value={targetCredit}
                 onChange={(e) => setTargetCredit(Number(e.target.value))}
-                className="planpick-credit-range w-full disabled:opacity-45"
+                className="planpick-credit-range w-full"
                 style={{ "--range-progress": rangeProgress } as React.CSSProperties}
               />
-
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <button
-                  data-testid="toggle-over-credit"
-                  type="button"
-                  aria-pressed={overToggle}
-                  onClick={() => setOverToggle((value) => !value)}
-                  className={`relative h-8 w-16 rounded-full transition-all ${
-                    overToggle ? "bg-[#6B5DF6]" : "bg-[#D9D9E8] shadow-inner"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_2px_8px_rgba(45,39,80,0.24)] transition-all ${
-                      overToggle ? "left-9" : "left-1"
-                    }`}
-                  />
-                </button>
-                <span className="text-[15px] font-black text-[#9A9EAD]">22학점 이상</span>
-
-                {overToggle && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      data-testid="input-over-credit"
-                      type="number"
-                      min={22}
-                      max={40}
-                      value={overCredit}
-                      onChange={(e) => setOverCredit(Number(e.target.value))}
-                      className="h-10 w-24 rounded-xl border border-[#CFCBEA] px-3 text-sm font-bold outline-none focus:border-[#6B5DF6] focus:ring-4 focus:ring-[#6B5DF4]/10"
-                    />
-                    <span className="text-sm font-bold text-[#858998]">학점</span>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -221,7 +180,7 @@ export default function RequestPage() {
               현재 수강 중인 시간표 이미지 <span className="text-[#9EA2AF]">(선택)</span>
             </label>
             <p className="mb-4 text-[14px] font-bold text-[#A0A4B2]">
-              여러 장을 올리면 AI가 약 5초 동안 분석 중인 척 보여준 뒤 완료 상태로 바뀝니다.
+              이미지를 여러 장 올리면 약 5초 동안 “이미지 분석 중입니다...”를 보여준 뒤 분석 완료 상태로 바뀝니다.
             </p>
             <input
               ref={fileInputRef}
@@ -248,7 +207,7 @@ export default function RequestPage() {
                     onClick={() => fileInputRef.current?.click()}
                     className="rounded-2xl bg-white px-4 py-2 text-sm font-black text-[#6B5DF6] shadow-sm"
                   >
-                    더 추가
+                    추가
                   </button>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">

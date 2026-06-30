@@ -1,4 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
+import { getAuth, signInAnonymously } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -13,3 +14,17 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+let authPromise: Promise<void> | null = null;
+
+export function ensureFirebaseAuth() {
+  if (auth.currentUser) return Promise.resolve();
+  authPromise ??= signInAnonymously(auth)
+    .then(() => undefined)
+    .catch((error) => {
+      authPromise = null;
+      console.warn("Firebase anonymous auth failed", error);
+    });
+  return authPromise;
+}

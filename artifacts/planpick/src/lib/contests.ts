@@ -1,4 +1,4 @@
-import { db } from "./firebase";
+import { db, ensureFirebaseAuth } from "./firebase";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 
 export interface ContestLink {
@@ -22,6 +22,8 @@ export interface ContestRequest {
   status: "pending" | "complete";
 }
 
+type RawContest = Record<string, unknown>;
+
 const STORAGE_KEY = "planpickContests";
 const REQUEST_STORAGE_KEY = "planpickContestRequests";
 
@@ -36,30 +38,6 @@ const DEFAULT_CONTESTS: ContestInfo[] = [
       { label: "공모전 보기", href: "https://www.wevity.com/" },
       { label: "아이디어 참고", href: "https://www.thinkcontest.com/" },
       { label: "지원 준비", href: "https://www.all-con.co.kr/" },
-    ],
-  },
-  {
-    id: "contest-public-data",
-    name: "공공데이터 활용 창업 경진대회",
-    date: "2026.07.15 - 2026.09.02",
-    reason: "학교, 지역, 진로 데이터를 묶어 학생 맞춤 추천 서비스로 발전시키기 좋아요.",
-    poster: "",
-    links: [
-      { label: "공공데이터", href: "https://www.data.go.kr/" },
-      { label: "공모전 검색", href: "https://www.wevity.com/" },
-      { label: "팀 빌딩", href: "https://www.thinkcontest.com/" },
-    ],
-  },
-  {
-    id: "contest-career",
-    name: "청년 진로 포트폴리오 챌린지",
-    date: "2026.08.01 - 2026.09.20",
-    reason: "수강 계획, 자격증, 채용 정보를 한 화면에 모으는 PlanPick 방향성과 잘 맞아요.",
-    poster: "",
-    links: [
-      { label: "공모전 모음", href: "https://www.all-con.co.kr/" },
-      { label: "포스터 보기", href: "https://www.wevity.com/" },
-      { label: "신청 가이드", href: "https://www.thinkcontest.com/" },
     ],
   },
 ];
@@ -77,43 +55,88 @@ function writeLocal<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-function normalizeContest(raw: Partial<ContestInfo> & { id?: string }, fallbackId: string): ContestInfo {
-  const links = Array.isArray(raw.links) ? raw.links : [];
+function firstText(raw: RawContest, keys: string[], fallback = "") {
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number") return String(value);
+  }
+  return fallback;
+}
+
+function normalizeLinks(raw: RawContest): ContestLink[] {
+  const rawLinks = raw.links || raw.link || raw.urls;
+  if (Array.isArray(rawLinks)) {
+    const links = rawLinks
+      .map((item, index) => {
+        if (typeof item === "string") return { label: `링크 ${index + 1}`, href: item };
+        if (item && typeof item === "object") {
+          const link = item as RawContest;
+          return {
+            label: firstText(link, ["label", "name", "title"], `링크 ${index + 1}`),
+            href: firstText(link, ["href", "url", "link"], ""),
+          };
+        }
+        return null;
+      })
+      .filter(Boolean) as ContestLink[];
+    if (links.length > 0) return links.slice(0, 3);
+  }
+
+  return [
+    { label: firstText(raw, ["link1Label", "url1Label"], "링크 1"), href: firstText(raw, ["link1", "url1", "homepage", "siteUrl"], "") },
+    { label: firstText(raw, ["link2Label", "url2Label"], "링크 2"), href: firstText(raw, ["link2", "url2", "applyUrl"], "") },
+    { label: firstText(raw, ["link3Label", "url3Label"], "링크 3"), href: firstText(raw, ["link3", "url3", "detailUrl"], "") },
+  ];
+}
+
+function normalizeContest(raw: RawContest, fallbackId: string): ContestInfo {
   return {
-    id: raw.id || fallbackId,
-    name: raw.name || "이름 없는 공모전",
-    date: raw.date || "일정 미정",
-    reason: raw.reason || "관리자 페이지에서 AI 추천 이유를 입력해 주세요.",
-    poster: raw.poster || "",
-    links: [
-      links[0] || { label: "링크 1", href: "" },
-      links[1] || { label: "링크 2", href: "" },
-      links[2] || { label: "링크 3", href: "" },
-    ],
+    id: firstText(raw, ["id", "contestId"], fallbackId),
+    name: firstText(raw, ["name", "title", "contestName", "competitionName", "공모전이름"], "이름 없는 공모전"),
+    date: firstText(raw, ["date", "period", "applicationDate", "applicationPeriod", "deadline", "dueDate", "신청날짜"], "일정 미정"),
+    reason: firstText(raw, ["reason", "aiReason", "recommendReason", "recommendationReason", "description", "추천이유"], "AI 추천 이유가 아직 등록되지 않았어요."),
+    poster: firstText(raw, ["poster", "posterUrl", "image", "imageUrl", "thumbnail", "thumbnailUrl", "photoUrl", "포스터"], ""),
+    links: normalizeLinks(raw),
   };
+}
+
+function extractContestDocs(data: RawContest, fallbackId: string) {
+  const arrays = [data.items, data.contests, data.list, data.data];
+  for (const value of arrays) {
+    if (Array.isArray(value)) {
+      return value.map((item, index) => normalizeContest((item || {}) as RawContest, `${fallbackId}-${index}`));
+    }
+  }
+  return [normalizeContest(data, fallbackId)];
 }
 
 export async function getContests(): Promise<ContestInfo[]> {
   try {
+    await ensureFirebaseAuth();
     const collectionSnap = await getDocs(collection(db, "contests"));
-    const collectionItems = collectionSnap.docs.map((snap) => normalizeContest({ id: snap.id, ...snap.data() }, snap.id));
-    if (collectionItems.length > 0) {
-      writeLocal(STORAGE_KEY, collectionItems);
-      return collectionItems;
+    const collectionItems = collectionSnap.docs.flatMap((snap) => extractContestDocs({ id: snap.id, ...snap.data() }, snap.id));
+    const usableItems = collectionItems.filter((item) => item.name && item.name !== "이름 없는 공모전");
+    if (usableItems.length > 0) {
+      writeLocal(STORAGE_KEY, usableItems);
+      return usableItems;
     }
-  } catch {
-    // Use legacy document or local backup when Firestore is unavailable.
+  } catch (error) {
+    console.warn("contests collection read failed", error);
   }
 
   try {
+    await ensureFirebaseAuth();
     const snap = await getDoc(doc(db, "planpickMvp", "contests"));
-    if (snap.exists() && Array.isArray(snap.data().items)) {
-      const items = snap.data().items.map((item: Partial<ContestInfo>, index: number) => normalizeContest(item, `contest-${index}`));
-      writeLocal(STORAGE_KEY, items);
-      return items;
+    if (snap.exists()) {
+      const items = extractContestDocs(snap.data() as RawContest, "legacy-contest");
+      if (items.length > 0) {
+        writeLocal(STORAGE_KEY, items);
+        return items;
+      }
     }
-  } catch {
-    // Local fallback below.
+  } catch (error) {
+    console.warn("legacy contests read failed", error);
   }
 
   return readLocal(STORAGE_KEY, DEFAULT_CONTESTS);
@@ -121,12 +144,14 @@ export async function getContests(): Promise<ContestInfo[]> {
 
 export async function saveContests(contests: ContestInfo[]) {
   writeLocal(STORAGE_KEY, contests);
+  await ensureFirebaseAuth();
   await setDoc(doc(db, "planpickMvp", "contests"), { items: contests }, { merge: true });
   await Promise.all(contests.map((contest) => setDoc(doc(db, "contests", contest.id), contest, { merge: true })));
 }
 
 export async function getContestRequests(): Promise<ContestRequest[]> {
   try {
+    await ensureFirebaseAuth();
     const snap = await getDoc(doc(db, "planpickMvp", "contestRequests"));
     if (snap.exists() && Array.isArray(snap.data().items)) {
       const items = snap.data().items as ContestRequest[];
@@ -149,21 +174,7 @@ export async function addContestRequest(text: string) {
   };
   const list = [request, ...(await getContestRequests())];
   writeLocal(REQUEST_STORAGE_KEY, list);
+  await ensureFirebaseAuth();
   await setDoc(doc(db, "planpickMvp", "contestRequests"), { items: list }, { merge: true });
   return request;
-}
-
-export function makeBlankContest(): ContestInfo {
-  return {
-    id: `contest-${Date.now()}`,
-    name: "",
-    date: "",
-    reason: "",
-    poster: "",
-    links: [
-      { label: "링크 1", href: "" },
-      { label: "링크 2", href: "" },
-      { label: "링크 3", href: "" },
-    ],
-  };
 }

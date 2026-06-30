@@ -1,4 +1,4 @@
-import { db } from "./firebase";
+import { db, ensureFirebaseAuth } from "./firebase";
 import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 
 const COLLECTION = "planpickMvp";
@@ -52,6 +52,7 @@ export async function getDataAsync<T>(key: string): Promise<T | null> {
   if (!docId) return getData<T>(key);
 
   try {
+    await ensureFirebaseAuth();
     const ref = doc(db, COLLECTION, docId);
     const snap = await withTimeout(getDoc(ref), 5000);
     if (!snap.exists()) return getData<T>(key);
@@ -69,6 +70,7 @@ export async function setDataAsync<T>(key: string, value: T): Promise<void> {
   if (!docId) return;
 
   try {
+    await ensureFirebaseAuth();
     const ref = doc(db, COLLECTION, docId);
     await withTimeout(setDoc(ref, packValue(key, value)), 5000);
   } catch {
@@ -82,6 +84,7 @@ export async function removeDataAsync(key: string): Promise<void> {
   if (!docId) return;
 
   try {
+    await ensureFirebaseAuth();
     const ref = doc(db, COLLECTION, docId);
     await withTimeout(deleteDoc(ref), 5000);
   } catch {}
