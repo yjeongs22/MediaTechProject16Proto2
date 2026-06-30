@@ -3,7 +3,7 @@ name: Deploy PlanPick to GitHub Pages
 on:
   push:
     branches:
-      - main
+      - codex/request-page-redesign
   workflow_dispatch:
 
 permissions:
