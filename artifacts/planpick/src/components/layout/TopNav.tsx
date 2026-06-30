@@ -8,9 +8,9 @@ const NAV_LINKS = [
   { label: "대시보드", href: "/" },
   { label: "수강신청", href: "/request" },
   { label: "시간표", href: "/results" },
-  { label: "졸업요건", href: "/" },
+  { label: "공모전", href: "/contests" },
   { label: "상담AI", href: "/" },
-  { label: "마이페이지", href: "/" },
+  { label: "마이페이지", href: "/login" },
 ];
 
 export function TopNav() {
@@ -59,6 +59,7 @@ export function TopNav() {
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
         </button>
+        <Link href="/login">
         <div
           className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 pr-2 rounded-full transition-colors"
           data-testid="btn-profile"
@@ -70,6 +71,7 @@ export function TopNav() {
           </Avatar>
           <ChevronDown className="w-4 h-4 text-muted-foreground" />
         </div>
+        </Link>
       </div>
     </div>
   );

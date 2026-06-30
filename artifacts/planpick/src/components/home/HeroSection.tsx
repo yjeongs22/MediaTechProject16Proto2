@@ -31,8 +31,8 @@ export function HeroSection() {
       </p>
       
       <div className="flex items-center gap-3">
-        <Button onClick={() => setLocation("/request")} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-6 text-base font-medium rounded-xl shadow-md" data-testid="btn-get-recommendation">
-          최적 시간표 추천받기 <ArrowRight className="ml-2 w-4 h-4" />
+        <Button onClick={() => setLocation("/contests")} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-6 text-base font-medium rounded-xl shadow-md" data-testid="btn-contests">
+          공모전 바로가기 <ArrowRight className="ml-2 w-4 h-4" />
         </Button>
         <Button variant="outline" className="px-6 py-6 text-base font-medium rounded-xl border-slate-300 text-slate-700 hover:bg-slate-50" data-testid="btn-guide">
           수강신청 가이드 <Play className="ml-2 w-4 h-4" />

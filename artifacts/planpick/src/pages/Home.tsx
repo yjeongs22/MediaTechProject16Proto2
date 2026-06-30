@@ -3,7 +3,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { TimetableCard } from "@/components/home/TimetableCard";
 import { AIPromoCard } from "@/components/home/AIPromoCard";
 import { LiveStatusCard } from "@/components/home/LiveStatusCard";
-import { NoticesCard } from "@/components/home/NoticesCard";
+import { WeatherCard } from "@/components/home/WeatherCard";
 import { FeatureIcons } from "@/components/home/FeatureIcons";
 
 export default function Home() {
@@ -32,7 +32,7 @@ export default function Home() {
           </div>
           <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
             <LiveStatusCard />
-            <NoticesCard />
+            <WeatherCard />
           </div>
         </div>
 

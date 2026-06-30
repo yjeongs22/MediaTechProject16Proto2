@@ -8,6 +8,8 @@ import RequestPage from "@/pages/RequestPage";
 import NeedsPage from "@/pages/NeedsPage";
 import WaitingPage from "@/pages/WaitingPage";
 import ResultPage from "@/pages/ResultPage";
+import ContestsPage from "@/pages/ContestsPage";
+import AuthPage from "@/pages/AuthPage";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
 
@@ -38,6 +40,8 @@ function Layout() {
             <Route path="/" component={Home} />
             <Route path="/request" component={RequestPage} />
             <Route path="/results" component={ResultPage} />
+            <Route path="/contests" component={ContestsPage} />
+            <Route path="/login" component={AuthPage} />
             <Route component={NotFound} />
           </Switch>
         </main>
