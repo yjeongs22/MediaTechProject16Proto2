@@ -29,25 +29,26 @@ export default function AuthPage() {
     setLoading(true);
     setMessage("");
     try {
-      const userRef = doc(db, "planpickUsers", id);
+      const userRef = doc(db, "planpickMvp", "users");
       const snap = await getDoc(userRef);
+      const users = (snap.exists() && typeof snap.data().users === "object" ? snap.data().users : {}) as Record<string, { passwordHash: string }>;
       const passwordHash = await hashPassword(password);
 
       if (mode === "signup") {
-        if (snap.exists()) {
+        if (users[id]) {
           setMessage("이미 사용 중인 아이디입니다.");
           return;
         }
-        await setDoc(userRef, {
-          userId: id,
-          passwordHash,
-          createdAt: serverTimestamp(),
-        });
+        const nextUsers = {
+          ...users,
+          [id]: { userId: id, passwordHash, createdAt: Date.now() },
+        };
+        await setDoc(userRef, { users: nextUsers, updatedAt: serverTimestamp() }, { merge: true });
         localStorage.setItem("planpickUser", JSON.stringify({ userId: id }));
         setMessage("회원가입이 완료되었습니다.");
         setMode("login");
       } else {
-        if (!snap.exists() || snap.data().passwordHash !== passwordHash) {
+        if (!users[id] || users[id].passwordHash !== passwordHash) {
           setMessage("아이디 또는 비밀번호가 맞지 않습니다.");
           return;
         }
@@ -55,7 +56,24 @@ export default function AuthPage() {
         setMessage("로그인되었습니다.");
       }
     } catch {
-      setMessage("처리 중 오류가 발생했습니다. Firebase 설정을 확인해주세요.");
+      const passwordHash = await hashPassword(password);
+      if (mode === "signup") {
+        const raw = localStorage.getItem("planpickUsers");
+        const users = raw ? JSON.parse(raw) : {};
+        users[id] = { userId: id, passwordHash, createdAt: Date.now() };
+        localStorage.setItem("planpickUsers", JSON.stringify(users));
+        localStorage.setItem("planpickUser", JSON.stringify({ userId: id }));
+        setMessage("회원가입이 완료되었습니다. Firebase 권한이 막혀 로컬에도 백업했어요.");
+      } else {
+        const raw = localStorage.getItem("planpickUsers");
+        const users = raw ? JSON.parse(raw) : {};
+        if (users[id]?.passwordHash === passwordHash) {
+          localStorage.setItem("planpickUser", JSON.stringify({ userId: id }));
+          setMessage("로그인되었습니다. Firebase 권한이 막혀 로컬 백업으로 확인했어요.");
+        } else {
+          setMessage("아이디 또는 비밀번호가 맞지 않습니다.");
+        }
+      }
     } finally {
       setLoading(false);
     }

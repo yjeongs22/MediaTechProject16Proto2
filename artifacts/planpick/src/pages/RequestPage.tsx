@@ -13,32 +13,38 @@ export default function RequestPage() {
   const [overToggle, setOverToggle] = useState(false);
   const [overCredit, setOverCredit] = useState(22);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [timetableImage, setTimetableImage] = useState<string | null>(null);
+  const [timetableImages, setTimetableImages] = useState<string[]>([]);
+  const [imageStatus, setImageStatus] = useState<"idle" | "analyzing" | "complete">("idle");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const creditValue = overToggle ? overCredit : targetCredit;
-  const rangeProgress = `${((targetCredit - 1) / 20) * 100}%`;
+  const rangeProgress = `${((Math.min(Math.max(targetCredit, 1), 21) - 1) / 20) * 100}%`;
 
-  function handleImageFile(file: File) {
-    if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => setTimetableImage(e.target?.result as string);
-    reader.readAsDataURL(file);
+  function handleImageFiles(files: FileList | File[]) {
+    const imageFiles = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    if (imageFiles.length === 0) return;
+
+    setImageStatus("analyzing");
+    imageFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => setTimetableImages((prev) => [...prev, e.target?.result as string]);
+      reader.readAsDataURL(file);
+    });
+    window.setTimeout(() => setImageStatus("complete"), 5000);
   }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleImageFile(file);
+    if (e.dataTransfer.files.length > 0) handleImageFiles(e.dataTransfer.files);
   }
 
   function validate() {
     const e: Record<string, string> = {};
     if (!school.trim()) e.school = "학교를 입력해주세요";
     if (!major.trim()) e.major = "학과를 입력해주세요";
-    if (!grade) e.grade = "학년을 선택해주세요";
+    if (!grade.trim()) e.grade = "학년을 입력해주세요";
     return e;
   }
 
@@ -132,36 +138,29 @@ export default function RequestPage() {
 
             <div>
               <label className="mb-2 block text-[15px] font-black text-black">학년</label>
-              <select
-                data-testid="select-grade"
+              <input
+                data-testid="input-grade"
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
-                className={`${inputClass} appearance-none ${errors.grade ? errorInputClass : ""}`}
-              >
-                <option value="">예) O학년</option>
-                <option value="1학년">1학년</option>
-                <option value="2학년">2학년</option>
-                <option value="3학년">3학년</option>
-                <option value="4학년">4학년</option>
-              </select>
+                placeholder="예) 3학년"
+                className={`${inputClass} ${errors.grade ? errorInputClass : ""}`}
+              />
               {errors.grade && <p className="mt-2 text-sm font-bold text-red-500">{errors.grade}</p>}
             </div>
           </div>
 
           <div className="mt-6">
             <label className="mb-2 block text-[15px] font-black text-black">이번 학기 목표 학점</label>
-            <select
+            <input
+              type="number"
+              min={1}
+              max={40}
               value={targetCredit}
               onChange={(e) => setTargetCredit(Number(e.target.value))}
               disabled={overToggle}
-              className={`${inputClass} appearance-none disabled:opacity-55`}
-            >
-              {Array.from({ length: 21 }, (_, i) => i + 1).map((credit) => (
-                <option key={credit} value={credit}>
-                  예) {credit}학점
-                </option>
-              ))}
-            </select>
+              placeholder="예) 18학점"
+              className={`${inputClass} disabled:opacity-55`}
+            />
 
             <div className="mt-5 rounded-[18px] border border-[#E4E1F0] bg-[#F8F5FF] px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
@@ -174,7 +173,7 @@ export default function RequestPage() {
                 type="range"
                 min={1}
                 max={21}
-                value={targetCredit}
+                value={Math.min(Math.max(targetCredit, 1), 21)}
                 disabled={overToggle}
                 onChange={(e) => setTargetCredit(Number(e.target.value))}
                 className="planpick-credit-range w-full disabled:opacity-45"
@@ -208,7 +207,7 @@ export default function RequestPage() {
                       max={40}
                       value={overCredit}
                       onChange={(e) => setOverCredit(Number(e.target.value))}
-                      className="h-10 w-24 rounded-xl border border-[#CFCBEA] px-3 text-sm font-bold outline-none focus:border-[#6B5DF6] focus:ring-4 focus:ring-[#6B5DF6]/10"
+                      className="h-10 w-24 rounded-xl border border-[#CFCBEA] px-3 text-sm font-bold outline-none focus:border-[#6B5DF6] focus:ring-4 focus:ring-[#6B5DF4]/10"
                     />
                     <span className="text-sm font-bold text-[#858998]">학점</span>
                   </div>
@@ -222,35 +221,50 @@ export default function RequestPage() {
               현재 수강 중인 시간표 이미지 <span className="text-[#9EA2AF]">(선택)</span>
             </label>
             <p className="mb-4 text-[14px] font-bold text-[#A0A4B2]">
-              이미 듣고 있는 수업 시간표를 업로드하면 AI가 해당 시간을 제외하고 추천합니다.
+              여러 장을 올리면 AI가 약 5초 동안 분석 중인 척 보여준 뒤 완료 상태로 바뀝니다.
             </p>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleImageFile(file);
+                if (e.target.files) handleImageFiles(e.target.files);
               }}
             />
 
-            {timetableImage ? (
-              <div className="relative overflow-hidden rounded-[20px] border border-[#DCD9F0] bg-[#F8F5FF]">
-                <img src={timetableImage} alt="업로드된 시간표" className="h-64 w-full object-contain" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTimetableImage(null);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                  }}
-                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-md transition-colors hover:text-red-500"
-                  aria-label="이미지 삭제"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-                <div className="absolute bottom-4 left-4 rounded-full bg-[#6B5DF6] px-4 py-2 text-sm font-black text-white">
-                  이미지 업로드 완료
+            {timetableImages.length > 0 ? (
+              <div className="rounded-[20px] border border-[#DCD9F0] bg-[#F8F5FF] p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-black text-slate-800">업로드된 시간표 {timetableImages.length}개</p>
+                    <p className={`mt-1 text-sm font-black ${imageStatus === "complete" ? "text-green-600" : "text-[#6B5DF6]"}`}>
+                      {imageStatus === "analyzing" ? "이미지 분석 중입니다..." : "분석 완료!"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded-2xl bg-white px-4 py-2 text-sm font-black text-[#6B5DF6] shadow-sm"
+                  >
+                    더 추가
+                  </button>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {timetableImages.map((image, index) => (
+                    <div key={`${image}-${index}`} className="relative overflow-hidden rounded-2xl bg-white">
+                      <img src={image} alt={`업로드된 시간표 ${index + 1}`} className="h-44 w-full object-contain" />
+                      <button
+                        type="button"
+                        onClick={() => setTimetableImages((prev) => prev.filter((_, i) => i !== index))}
+                        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-md transition-colors hover:text-red-500"
+                        aria-label="이미지 제거"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : (
@@ -272,7 +286,7 @@ export default function RequestPage() {
                   <ImagePlus className="h-7 w-7 text-[#6B5DF6]" />
                 </div>
                 <p className="text-[16px] font-black text-slate-700">이미지를 드래그하거나 클릭하여 업로드</p>
-                <p className="mt-1 text-sm font-bold text-[#A0A4B2]">PNG, JPG, JPEG 지원</p>
+                <p className="mt-1 text-sm font-bold text-[#A0A4B2]">PNG, JPG, JPEG 여러 장 지원</p>
               </div>
             )}
           </div>

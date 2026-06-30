@@ -1,41 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowUpRight, Award, BriefcaseBusiness, CalendarDays, GraduationCap, Link as LinkIcon, Sparkles } from "lucide-react";
-
-const contests = [
-  {
-    name: "대학생 AI 서비스 기획 공모전",
-    date: "2026.07.01 - 2026.08.12",
-    reason: "PlanPick 전공/시간표 데이터와 연결해 AI 추천 서비스 아이디어를 확장하기 좋아요.",
-    tone: "from-indigo-500 to-violet-500",
-    links: [
-      { label: "공모전 보기", href: "https://www.wevity.com/" },
-      { label: "아이디어 참고", href: "https://www.thinkcontest.com/" },
-      { label: "지원 준비", href: "https://www.all-con.co.kr/" },
-    ],
-  },
-  {
-    name: "공공데이터 활용 창업 경진대회",
-    date: "2026.07.15 - 2026.09.02",
-    reason: "학교·지역·채용 데이터를 묶어 학생 맞춤 추천 서비스로 발전시키기 좋아요.",
-    tone: "from-sky-500 to-cyan-400",
-    links: [
-      { label: "공공데이터", href: "https://www.data.go.kr/" },
-      { label: "공모전 검색", href: "https://www.wevity.com/" },
-      { label: "팀 빌딩", href: "https://www.thinkcontest.com/" },
-    ],
-  },
-  {
-    name: "청년 진로 포트폴리오 챌린지",
-    date: "2026.08.01 - 2026.09.20",
-    reason: "수강 계획, 자격증, 채용 정보를 한 화면에 모으는 PlanPick 방향성과 잘 맞아요.",
-    tone: "from-fuchsia-500 to-pink-400",
-    links: [
-      { label: "공모전 모음", href: "https://www.all-con.co.kr/" },
-      { label: "포스터 보기", href: "https://www.wevity.com/" },
-      { label: "신청 가이드", href: "https://www.thinkcontest.com/" },
-    ],
-  },
-];
+import { getContests, type ContestInfo } from "@/lib/contests";
 
 const careerItems = [
   { icon: BriefcaseBusiness, title: "채용 정보", text: "AI 서비스 기획 인턴, 데이터 분석 인턴, 프론트엔드 인턴" },
@@ -44,6 +9,16 @@ const careerItems = [
 ];
 
 export default function ContestsPage() {
+  const [contests, setContests] = useState<ContestInfo[]>([]);
+  const [selected, setSelected] = useState<ContestInfo | null>(null);
+
+  useEffect(() => {
+    getContests().then((items) => {
+      setContests(items);
+      setSelected(items[0] ?? null);
+    });
+  }, []);
+
   return (
     <div className="min-h-full bg-[#F4F2FF] px-6 py-8 md:px-10 lg:px-14">
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-7">
@@ -60,8 +35,21 @@ export default function ContestsPage() {
 
         <div className="grid gap-5 lg:grid-cols-3">
           {contests.map((contest, index) => (
-            <article key={contest.name} className="overflow-hidden rounded-3xl bg-white shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-              <div className={`relative h-48 bg-gradient-to-br ${contest.tone} p-5 text-white`}>
+            <button
+              type="button"
+              key={contest.id}
+              onClick={() => setSelected(contest)}
+              className="overflow-hidden rounded-3xl bg-white text-left shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100 transition-transform hover:-translate-y-1"
+            >
+              <div className="relative h-64 bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
+                {contest.poster ? (
+                  <img src={contest.poster} alt={`${contest.name} 포스터`} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full items-center justify-center p-6 text-center text-2xl font-black">
+                    {contest.name || "공모전 포스터"}
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
                 <div className="absolute right-5 top-5 rounded-full bg-white/20 px-3 py-1 text-xs font-black">
                   PICK {index + 1}
                 </div>
@@ -70,18 +58,34 @@ export default function ContestsPage() {
                   <h2 className="text-2xl font-black leading-tight">{contest.name}</h2>
                 </div>
               </div>
+            </button>
+          ))}
+        </div>
 
+        {selected && (
+          <section className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
+            <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+              <div className="overflow-hidden rounded-2xl bg-indigo-50">
+                {selected.poster ? (
+                  <img src={selected.poster} alt={`${selected.name} 포스터`} className="h-full min-h-[360px] w-full object-cover" />
+                ) : (
+                  <div className="flex min-h-[360px] items-center justify-center p-8 text-center text-2xl font-black text-indigo-500">
+                    포스터를 admin에서 넣어주세요
+                  </div>
+                )}
+              </div>
               <div className="space-y-4 p-5">
+                <h2 className="text-3xl font-black text-slate-900">{selected.name}</h2>
                 <div className="flex items-center gap-2 text-sm font-black text-slate-600">
                   <CalendarDays className="h-4 w-4 text-indigo-500" />
-                  {contest.date}
+                  {selected.date}
                 </div>
                 <div className="rounded-2xl bg-indigo-50 p-4">
                   <p className="mb-1 text-xs font-black text-indigo-500">AI 추천 이유</p>
-                  <p className="text-sm font-bold leading-relaxed text-slate-600">{contest.reason}</p>
+                  <p className="text-sm font-bold leading-relaxed text-slate-600">{selected.reason}</p>
                 </div>
                 <div className="grid gap-2">
-                  {contest.links.map((link) => (
+                  {selected.links.map((link) => (
                     <a
                       key={link.label}
                       href={link.href}
@@ -98,9 +102,9 @@ export default function ContestsPage() {
                   ))}
                 </div>
               </div>
-            </article>
-          ))}
-        </div>
+            </div>
+          </section>
+        )}
 
         <section className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
           <div className="mb-5 flex items-center justify-between">

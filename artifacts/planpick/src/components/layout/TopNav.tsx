@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { label: "공모전", href: "/contests" },
   { label: "상담AI", href: "/" },
   { label: "마이페이지", href: "/login" },
+  { label: "Admin", href: "/admin" },
 ];
 
 export function TopNav() {

@@ -10,12 +10,13 @@ import WaitingPage from "@/pages/WaitingPage";
 import ResultPage from "@/pages/ResultPage";
 import ContestsPage from "@/pages/ContestsPage";
 import AuthPage from "@/pages/AuthPage";
+import AdminPage from "@/pages/AdminPage";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
 
 const queryClient = new QueryClient();
 
-const FULL_SCREEN_PATHS = ["/request/needs", "/request/waiting"];
+const FULL_SCREEN_PATHS: string[] = [];
 
 function Layout() {
   const [location] = useLocation();
@@ -42,6 +43,7 @@ function Layout() {
             <Route path="/results" component={ResultPage} />
             <Route path="/contests" component={ContestsPage} />
             <Route path="/login" component={AuthPage} />
+            <Route path="/admin" component={AdminPage} />
             <Route component={NotFound} />
           </Switch>
         </main>
