@@ -14,9 +14,15 @@ export function HeroSection() {
       </div>
       
       <h1 className="text-5xl md:text-6xl font-bold leading-[1.15] tracking-tight mb-6">
-        <span className="block text-slate-900">더 스마트한</span>
-        <span className="block text-indigo-600">수강신청,</span>
-        <span className="block text-slate-900">더 완벽한 학기</span>
+        <span className="block text-slate-900" style={{ fontFamily: "PlanPickPretendard", fontWeight: 700 }}>
+          더 스마트한
+        </span>
+        <span className="block text-indigo-600" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>
+          수강신청,
+        </span>
+        <span className="block text-slate-900" style={{ fontFamily: "PlanPickPretendard", fontWeight: 700 }}>
+          더 완벽한 학기
+        </span>
       </h1>
       
       <p className="text-muted-foreground text-lg mb-8 max-w-[400px] leading-relaxed">
