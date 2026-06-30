@@ -1,8 +1,0 @@
-uploads = []
-generated = []
-
-[[outputs]]
-id = "8mLXHBfZ-KdMM1ehik2Xb"
-uri = "file://planpick-build.zip"
-type = "unspecified"
-title = "planpick-build.zip"
