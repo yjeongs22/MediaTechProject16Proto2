@@ -55,17 +55,35 @@ function writeLocal<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-function firstText(raw: RawContest, keys: string[], fallback = "") {
+function firstText(raw: RawContest, keys: string[], fallback = ""): string {
   for (const key of keys) {
     const value = raw[key];
     if (typeof value === "string" && value.trim()) return value.trim();
     if (typeof value === "number") return String(value);
+    if (value && typeof value === "object") {
+      const nested = value as RawContest;
+      const nestedValue: string = firstText(nested, ["url", "href", "src", "downloadURL", "path"], "");
+      if (nestedValue) return nestedValue;
+    }
   }
   return fallback;
 }
 
+function normalizeMediaUrl(value: string) {
+  if (!value) return "";
+  if (value.startsWith("gs://")) {
+    const withoutScheme = value.slice(5);
+    const slashIndex = withoutScheme.indexOf("/");
+    if (slashIndex < 0) return value;
+    const bucket = withoutScheme.slice(0, slashIndex);
+    const path = withoutScheme.slice(slashIndex + 1);
+    return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(path)}?alt=media`;
+  }
+  return value;
+}
+
 function normalizeLinks(raw: RawContest): ContestLink[] {
-  const rawLinks = raw.links || raw.link || raw.urls;
+  const rawLinks = raw.links || raw.link || raw.urls || raw.linkList || raw.homepages;
   if (Array.isArray(rawLinks)) {
     const links = rawLinks
       .map((item, index) => {
@@ -84,19 +102,38 @@ function normalizeLinks(raw: RawContest): ContestLink[] {
   }
 
   return [
-    { label: firstText(raw, ["link1Label", "url1Label"], "링크 1"), href: firstText(raw, ["link1", "url1", "homepage", "siteUrl"], "") },
-    { label: firstText(raw, ["link2Label", "url2Label"], "링크 2"), href: firstText(raw, ["link2", "url2", "applyUrl"], "") },
-    { label: firstText(raw, ["link3Label", "url3Label"], "링크 3"), href: firstText(raw, ["link3", "url3", "detailUrl"], "") },
+    { label: firstText(raw, ["link1Label", "url1Label"], "링크 1"), href: firstText(raw, ["link1", "url1", "homepage", "siteUrl", "site", "website"], "") },
+    { label: firstText(raw, ["link2Label", "url2Label"], "링크 2"), href: firstText(raw, ["link2", "url2", "applyUrl", "applicationUrl", "applicationLink"], "") },
+    { label: firstText(raw, ["link3Label", "url3Label"], "링크 3"), href: firstText(raw, ["link3", "url3", "detailUrl", "detailLink", "noticeUrl"], "") },
   ];
 }
 
 function normalizeContest(raw: RawContest, fallbackId: string): ContestInfo {
+  const poster = firstText(raw, [
+    "poster",
+    "posterUrl",
+    "posterURL",
+    "posterImage",
+    "posterImageUrl",
+    "image",
+    "imageUrl",
+    "imageURL",
+    "thumbnail",
+    "thumbnailUrl",
+    "thumbnailURL",
+    "photoUrl",
+    "fileUrl",
+    "downloadURL",
+    "storageUrl",
+    "포스터",
+  ], "");
+
   return {
     id: firstText(raw, ["id", "contestId"], fallbackId),
     name: firstText(raw, ["name", "title", "contestName", "competitionName", "공모전이름"], "이름 없는 공모전"),
     date: firstText(raw, ["date", "period", "applicationDate", "applicationPeriod", "deadline", "dueDate", "신청날짜"], "일정 미정"),
     reason: firstText(raw, ["reason", "aiReason", "recommendReason", "recommendationReason", "description", "추천이유"], "AI 추천 이유가 아직 등록되지 않았어요."),
-    poster: firstText(raw, ["poster", "posterUrl", "image", "imageUrl", "thumbnail", "thumbnailUrl", "photoUrl", "포스터"], ""),
+    poster: normalizeMediaUrl(poster),
     links: normalizeLinks(raw),
   };
 }

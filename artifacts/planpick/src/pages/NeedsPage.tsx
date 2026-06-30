@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { getCurrentRequestId, getData, upsertRequest, type PlanpickRequest, type StudentInfo } from "@/lib/storage";
 import { ArrowLeft, BotMessageSquare, Sparkles } from "lucide-react";
+import logoImg from "@assets/image-Photoroom_1782734124454.png";
 
 export default function NeedsPage() {
   const [, setLocation] = useLocation();
@@ -35,9 +36,8 @@ export default function NeedsPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm">
             <BotMessageSquare className="h-5 w-5 text-[#6B5DF6]" />
           </div>
-          <h2 className="text-3xl font-black text-slate-800">
-            PlanPick <span className="text-slate-300">AI</span>
-          </h2>
+          <img src={logoImg} alt="PlanPick" className="h-10 w-auto object-contain" />
+          <span className="text-3xl font-black text-slate-300">AI</span>
         </div>
 
         <form

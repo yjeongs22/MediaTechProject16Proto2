@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
-import { AlertTriangle, ArrowLeft, BookOpen, Box, Calendar, CheckCircle, Download, ExternalLink, GraduationCap, RotateCcw, Sparkles, Star, ThumbsUp, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, BookOpen, Box, CheckCircle, Download, ExternalLink, GraduationCap, RotateCcw, Sparkles, Star, ThumbsUp, Users, X } from "lucide-react";
 import { getCourses, type Course } from "@/lib/courses";
 import { getCurrentRequestId, getRequestById, type PlanData, type PlanpickRequest } from "@/lib/storage";
 import { getCurrentUserName } from "@/lib/auth";
@@ -15,13 +15,13 @@ const PLAN_TABS = [
 ];
 
 const COURSE_FALLBACK: Record<string, Partial<Course>> = {
-  "data-structure": { name: "자료구조", type: "전공필수", day: "월", start: "10:00", end: "12:00", room: "공학관 302호", credit: 3, color: "#A78BFA" },
-  "computer-arch": { name: "컴퓨터구조", type: "전공필수", day: "월", start: "14:00", end: "16:00", room: "공학관 405호", credit: 3, color: "#A78BFA" },
-  "web-programming": { name: "웹프로그래밍", type: "전공선택", day: "수", start: "13:00", end: "15:00", room: "실습실 210호", credit: 3, color: "#C4B5FD" },
-  database: { name: "데이터베이스", type: "전공선택", day: "화", start: "10:00", end: "12:00", room: "공학관 302호", credit: 3, color: "#8BE26B" },
-  english: { name: "교양영어", type: "교양", day: "화", start: "16:00", end: "17:00", room: "교양관 103호", credit: 2, color: "#F9CDD0" },
-  creative: { name: "창의적사고", type: "교양", day: "금", start: "13:00", end: "15:00", room: "교양관 205호", credit: 2, color: "#FDE68A" },
-  "ai-basic": { name: "AI기초", type: "전공선택", day: "수", start: "09:00", end: "11:00", room: "AI융합관 301호", credit: 3, color: "#DDD6FE" },
+  "data-structure": { name: "자료구조", type: "전공필수", day: "월", start: "10:00", end: "12:00", room: "공학관 302호", credit: 3, color: "#A78BFA", review: "과제는 많지만 전공 기초를 잡기 좋아요.", syllabus: "스택, 큐, 리스트, 트리, 그래프 등 기본 자료구조를 학습합니다." },
+  "computer-arch": { name: "컴퓨터구조", type: "전공필수", day: "월", start: "14:00", end: "16:00", room: "공학관 405호", credit: 3, color: "#A78BFA", review: "시험 범위가 넓지만 개념 이해가 중요해요.", syllabus: "CPU 구조, 명령어 집합, 메모리 계층, 파이프라인을 다룹니다." },
+  "web-programming": { name: "웹프로그래밍", type: "전공선택", day: "수", start: "13:00", end: "15:00", room: "실습실 210호", credit: 3, color: "#C4B5FD", review: "실습 중심이라 결과물이 남는 수업이에요.", syllabus: "HTML, CSS, JavaScript 기반 웹 서비스 구현을 학습합니다." },
+  database: { name: "데이터베이스", type: "전공선택", day: "화", start: "10:00", end: "12:00", room: "공학관 302호", credit: 3, color: "#8BE26B", review: "SQL 실습이 많고 프로젝트에 도움이 돼요.", syllabus: "관계형 데이터베이스, SQL, 정규화, 트랜잭션을 학습합니다." },
+  english: { name: "교양영어", type: "교양", day: "화", start: "16:00", end: "17:00", room: "교양관 103호", credit: 2, color: "#F9CDD0", review: "부담은 적고 출석이 중요해요.", syllabus: "" },
+  creative: { name: "창의적사고", type: "교양", day: "금", start: "13:00", end: "15:00", room: "교양관 205호", credit: 2, color: "#FDE68A", review: "팀 발표가 있지만 학점 부담은 낮아요.", syllabus: "문제 해결, 아이디어 발상, 팀 기반 발표 활동을 진행합니다." },
+  "ai-basic": { name: "AI기초", type: "전공선택", day: "수", start: "09:00", end: "11:00", room: "AI융합관 301호", credit: 3, color: "#DDD6FE", review: "최근 관심도가 높은 과목이고 수학 기초가 있으면 좋아요.", syllabus: "인공지능 개념, 머신러닝 기초, 데이터 학습 과정을 다룹니다." },
 };
 
 function normalizeCourse(course: Course): Course {
@@ -33,7 +33,80 @@ function timeToRow(time: string) {
   return hour - 9 + (minute || 0) / 60;
 }
 
-function TimetableGrid({ courses }: { courses: Course[] }) {
+function getReviews(course: Course) {
+  const base = course.review || "아직 강의평이 충분하지 않습니다.";
+  return [
+    base,
+    "수업 흐름이 비교적 명확하고 시험 전 정리가 중요해요.",
+    "과제와 출석을 꾸준히 챙기면 따라가기 괜찮다는 의견이 많아요.",
+  ];
+}
+
+function getSummary(course: Course) {
+  if (course.difficulty === "높음") return "한 줄 요약: 난이도는 있지만 전공 이해도 향상에 도움이 되는 과목입니다.";
+  if (course.team === "있음") return "한 줄 요약: 팀 활동이 있어 일정 관리가 중요한 과목입니다.";
+  return "한 줄 요약: 시간표 균형을 해치지 않으면서 챙기기 좋은 과목입니다.";
+}
+
+function CourseDetailModal({ course, onClose }: { course: Course; onClose: () => void }) {
+  const [showSyllabus, setShowSyllabus] = useState(false);
+  const reviews = getReviews(course);
+  const syllabus = course.syllabus?.trim();
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4">
+      <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <span className="mb-2 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-600">{course.type}</span>
+            <h2 className="text-2xl font-black text-slate-950">{course.name}</h2>
+            <p className="mt-1 text-sm font-bold text-slate-400">
+              {course.day} {course.start}~{course.end} ㅣ {course.room} ㅣ {course.credit}학점
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700" aria-label="닫기">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <section className="mb-4 rounded-2xl bg-slate-50 p-4">
+          <h3 className="mb-3 text-sm font-black text-slate-900">강의평 3개</h3>
+          <div className="space-y-2">
+            {reviews.map((review, index) => (
+              <p key={index} className="rounded-xl bg-white px-4 py-3 text-sm font-bold leading-relaxed text-slate-600">
+                {index + 1}. {review}
+              </p>
+            ))}
+          </div>
+        </section>
+
+        <p className="mb-5 rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-black text-indigo-600">{getSummary(course)}</p>
+
+        <button onClick={() => setShowSyllabus(true)} className="w-full rounded-2xl bg-[#5B3FE8] px-5 py-3 text-sm font-black text-white">
+          강의계획서 보기
+        </button>
+      </div>
+
+      {showSyllabus && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-black text-slate-950">강의계획서</h3>
+              <button onClick={() => setShowSyllabus(false)} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700" aria-label="강의계획서 닫기">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="min-h-36 rounded-2xl bg-slate-50 p-5 text-sm font-bold leading-relaxed text-slate-600">
+              {syllabus || "아직 등록되지 않았습니다."}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TimetableGrid({ courses, onCourseClick }: { courses: Course[]; onCourseClick: (course: Course) => void }) {
   return (
     <div className="rounded-2xl border border-slate-100 bg-white p-4">
       <h3 className="mb-4 border-l-4 border-[#9D91F7] pl-3 text-lg font-black text-slate-900">추천 시간표</h3>
@@ -68,9 +141,10 @@ function TimetableGrid({ courses }: { courses: Course[] }) {
               const top = timeToRow(course.start) * 56;
               const height = Math.max(42, (timeToRow(course.end) - timeToRow(course.start)) * 56 - 4);
               return (
-                <div
+                <button
                   key={`${course.id}-${index}`}
-                  className="absolute rounded-xl border border-black/5 p-2 text-xs font-black text-slate-700 shadow-sm"
+                  onClick={() => onCourseClick(course)}
+                  className="absolute rounded-xl border border-black/5 p-2 text-left text-xs font-black text-slate-700 shadow-sm transition-transform hover:-translate-y-0.5"
                   style={{
                     left: `calc(${dayIndex * 20}% + 8px)`,
                     width: "calc(20% - 16px)",
@@ -80,7 +154,7 @@ function TimetableGrid({ courses }: { courses: Course[] }) {
                   }}
                 >
                   {course.name}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -90,14 +164,12 @@ function TimetableGrid({ courses }: { courses: Course[] }) {
   );
 }
 
-function CourseList({ courses }: { courses: Course[] }) {
+function CourseList({ courses, onCourseClick }: { courses: Course[]; onCourseClick: (course: Course) => void }) {
   return (
     <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="border-l-4 border-[#9D91F7] pl-3 text-lg font-black text-slate-900">추천 과목 목록</h3>
-        <button className="flex items-center gap-1 text-sm font-black text-slate-400">
-          전체보기 <ExternalLink className="h-4 w-4" />
-        </button>
+        <span className="text-sm font-black text-slate-400">전체보기 →</span>
       </div>
       <div className="space-y-3">
         {courses.map((course) => (
@@ -113,11 +185,13 @@ function CourseList({ courses }: { courses: Course[] }) {
               </p>
             </div>
             <div className="hidden text-amber-400 md:block">
-              {"★★★★★".split("").map((star, index) => (
+              {[0, 1, 2, 3, 4].map((index) => (
                 <Star key={index} className="inline h-4 w-4 fill-current" />
               ))}
             </div>
-            <button className="rounded-full border border-slate-200 px-4 py-2 text-xs font-black text-slate-700">강의정보</button>
+            <button onClick={() => onCourseClick(course)} className="rounded-full border border-slate-200 px-4 py-2 text-xs font-black text-slate-700">
+              강의정보
+            </button>
           </div>
         ))}
       </div>
@@ -130,6 +204,7 @@ export default function ResultPage() {
   const [request, setRequest] = useState<PlanpickRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<(typeof PLAN_TABS)[number]["key"]>("plan1");
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const userName = getCurrentUserName() || "사용자";
   const allCourses = useMemo(() => getCourses().map(normalizeCourse), []);
 
@@ -281,11 +356,11 @@ export default function ResultPage() {
                   </ul>
                 </section>
               </aside>
-              <TimetableGrid courses={selectedCourses} />
+              <TimetableGrid courses={selectedCourses} onCourseClick={setSelectedCourse} />
             </div>
 
             <div className="space-y-4">
-              <CourseList courses={selectedCourses} />
+              <CourseList courses={selectedCourses} onCourseClick={setSelectedCourse} />
               <section className="relative overflow-hidden rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
                 <h3 className="mb-5 border-l-4 border-[#6B5DF6] pl-3 text-xl font-black text-slate-900">AI 추천 이유</h3>
                 <ul className="space-y-2 text-sm font-black text-slate-700">
@@ -316,6 +391,8 @@ export default function ResultPage() {
           </button>
         </div>
       </div>
+
+      {selectedCourse && <CourseDetailModal course={selectedCourse} onClose={() => setSelectedCourse(null)} />}
     </div>
   );
 }
