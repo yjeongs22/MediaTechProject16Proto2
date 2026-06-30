@@ -1,34 +1,35 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
-import robotImg from "@assets/로봇_1782723959280.png";
 import { useLocation } from "wouter";
 
 export function AIPromoCard() {
   const [, setLocation] = useLocation();
+
   return (
-    <Card className="border-0 shadow-md rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 text-white relative">
-      <CardContent className="p-6 md:p-8 flex items-center justify-between h-full relative z-10 pt-[50px] pb-[50px]">
+    <Card className="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
+      <CardContent className="relative z-10 flex h-full items-center justify-between p-6 pb-[50px] pt-[50px] md:p-8 md:pb-[50px] md:pt-[50px]">
         <div className="max-w-[70%]">
-          <h3 className="text-2xl font-bold mb-2">플랜픽 AI 시간표</h3>
-          <p className="text-indigo-100 text-sm mb-6 leading-relaxed">
-            학교·학과·학년만 입력하면 AI가 최적의 시간표를 추천합니다.
-          </p>
-          <button onClick={() => setLocation("/request")} className="bg-white/20 hover:bg-white/30 transition-colors border border-white/30 text-white px-5 py-2.5 rounded-full text-sm font-medium flex items-center" data-testid="btn-ai-start">
-            시작하기 <ArrowRight className="ml-1.5 w-4 h-4" />
+          <h3 className="mb-2 text-2xl font-bold">플랜픽 AI 시간표</h3>
+          <p className="mb-6 text-sm leading-relaxed text-indigo-100">학교, 학과, 학년 정보를 바탕으로 AI가 최적의 시간표를 추천합니다.</p>
+          <button
+            onClick={() => setLocation("/request")}
+            className="flex items-center rounded-full border border-white/30 bg-white/20 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/30"
+            data-testid="btn-ai-start"
+          >
+            시작하기 <ArrowRight className="ml-1.5 h-4 w-4" />
           </button>
         </div>
-        
+
         <div className="relative flex-shrink-0">
-          <img src={robotImg} alt="AI 로봇" className="w-32 h-32 object-contain drop-shadow-xl ml-[20px] mr-[20px] pl-[0px] pr-[0px] mt-[2px] mb-[2px]" />
-          <div className="absolute top-0 -left-6 bg-white text-indigo-600 text-xs font-bold px-3 py-1.5 rounded-2xl rounded-br-sm shadow-sm animate-bounce">
+          <img src={`${import.meta.env.BASE_URL}robot.png`} alt="AI 로봇" className="ml-[20px] mr-[20px] h-32 w-32 object-contain drop-shadow-xl" />
+          <div className="absolute -left-6 top-0 animate-bounce rounded-2xl rounded-br-sm bg-white px-3 py-1.5 text-xs font-bold text-indigo-600 shadow-sm">
             ...
           </div>
         </div>
       </CardContent>
-      {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-40 h-40 bg-purple-400/20 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
+      <div className="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-purple-400/20 blur-2xl" />
     </Card>
   );
 }

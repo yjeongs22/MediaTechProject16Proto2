@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { LogIn, UserPlus } from "lucide-react";
+import { useLocation } from "wouter";
 
 type StoredUser = {
   userId: string;
@@ -35,6 +36,7 @@ function writeLocalUser(user: StoredUser) {
 }
 
 export default function AuthPage() {
+  const [, setLocation] = useLocation();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [userId, setUserId] = useState("");
@@ -81,6 +83,7 @@ export default function AuthPage() {
         }
         writeLocalUser(user);
         setMessage("로그인되었습니다.");
+        setLocation("/");
       }
     } catch {
       if (mode === "signup") {
@@ -92,6 +95,7 @@ export default function AuthPage() {
         if (user?.passwordHash === passwordHash) {
           writeLocalUser(user);
           setMessage("로그인되었습니다. Firebase 권한 문제로 로컬 백업을 사용했어요.");
+          setLocation("/");
         } else {
           setMessage("아이디 또는 비밀번호가 맞지 않습니다.");
         }

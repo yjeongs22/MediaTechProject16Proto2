@@ -5,37 +5,45 @@ import { useLocation } from "wouter";
 
 export function HeroSection() {
   const [, setLocation] = useLocation();
+
   return (
-    <div className="flex flex-col justify-center h-full">
+    <div className="flex h-full flex-col justify-center">
       <div className="mb-2">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold tracking-wider uppercase border border-slate-200">
-          <span className="text-amber-400">⚡</span> SMART COURSE PLANNING
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          SMART COURSE PLANNING
         </span>
       </div>
-      
-      <h1 className="text-5xl md:text-6xl font-bold leading-[1.15] tracking-tight mb-6">
+
+      <h1 className="mb-6 text-5xl font-bold leading-[1.15] tracking-tight md:text-6xl">
         <span className="block text-slate-900" style={{ fontFamily: "PlanPickPretendard", fontWeight: 700 }}>
-          더 스마트한
+          똑똑한
         </span>
         <span className="block text-indigo-600" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>
           수강신청,
         </span>
         <span className="block text-slate-900" style={{ fontFamily: "PlanPickPretendard", fontWeight: 700 }}>
-          더 완벽한 학기
+          AI와 함께
         </span>
       </h1>
-      
-      <p className="text-muted-foreground text-lg mb-8 max-w-[400px] leading-relaxed" style = {{ fontFamily: "PlanPickPretendardS", fontWeight: 500 }}>
-        AI가 당신의 졸업요건과 선호도를 분석하여<br />
+
+      <p className="mb-8 max-w-[400px] text-lg leading-relaxed text-muted-foreground" style={{ fontFamily: "PlanPickPretendardS", fontWeight: 500 }}>
+        AI가 졸업요건과 선호도를 분석해
+        <br />
         최적의 시간표를 추천해드려요.
       </p>
-      
+
       <div className="flex items-center gap-3">
-        <Button onClick={() => setLocation("/contests")} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-6 text-base font-medium rounded-xl shadow-md" data-testid="btn-contests">
-          공모전 바로가기 <ArrowRight className="ml-2 w-4 h-4" />
+        <Button
+          onClick={() => setLocation("/contests")}
+          className="rounded-xl bg-indigo-600 px-6 py-6 text-base font-medium text-white shadow-md hover:bg-indigo-700"
+          data-testid="btn-contests"
+        >
+          공모전 바로가기
+          <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
-        <Button variant="outline" className="px-6 py-6 text-base font-medium rounded-xl border-slate-300 text-slate-700 hover:bg-slate-50" data-testid="btn-guide">
-          수강신청 가이드 <Play className="ml-2 w-4 h-4" />
+        <Button variant="outline" className="rounded-xl border-slate-300 px-6 py-6 text-base font-medium text-slate-700 hover:bg-slate-50" data-testid="btn-guide">
+          수강신청 가이드
+          <Play className="ml-2 h-4 w-4" />
         </Button>
       </div>
     </div>

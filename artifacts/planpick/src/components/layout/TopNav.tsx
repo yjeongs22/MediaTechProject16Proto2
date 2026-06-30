@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Bell, ChevronDown, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import logoImg from "@assets/image-Photoroom_1782734124454.png";
+import { getCurrentUser } from "@/lib/auth";
 
 const NAV_LINKS = [
   { label: "대시보드", href: "/" },
@@ -11,23 +12,14 @@ const NAV_LINKS = [
   { label: "공모전", href: "/contests" },
   { label: "상담AI", href: "/" },
   { label: "마이페이지", href: "/login" },
-  { label: "Admin", href: "/admin" },
 ];
-
-function readCurrentUser() {
-  try {
-    return JSON.parse(localStorage.getItem("planpickUser") || "null") as { userId: string; name?: string } | null;
-  } catch {
-    return null;
-  }
-}
 
 export function TopNav() {
   const [location] = useLocation();
-  const [user, setUser] = useState(readCurrentUser);
+  const [user, setUser] = useState(getCurrentUser);
 
   useEffect(() => {
-    const update = () => setUser(readCurrentUser());
+    const update = () => setUser(getCurrentUser());
     window.addEventListener("storage", update);
     window.addEventListener("planpick-user-change", update);
     return () => {
