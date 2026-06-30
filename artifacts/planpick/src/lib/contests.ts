@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 
 export interface ContestLink {
   label: string;
@@ -15,13 +15,22 @@ export interface ContestInfo {
   links: ContestLink[];
 }
 
+export interface ContestRequest {
+  id: string;
+  text: string;
+  createdAt: number;
+  status: "pending" | "complete";
+}
+
 const STORAGE_KEY = "planpickContests";
+const REQUEST_STORAGE_KEY = "planpickContestRequests";
+
 const DEFAULT_CONTESTS: ContestInfo[] = [
   {
     id: "contest-ai-service",
     name: "대학생 AI 서비스 기획 공모전",
     date: "2026.07.01 - 2026.08.12",
-    reason: "PlanPick 전공/시간표 데이터와 연결해 AI 추천 서비스 아이디어를 확장하기 좋아요.",
+    reason: "PlanPick의 시간표 추천 경험을 공모전 아이디어로 확장하기 좋아요.",
     poster: "",
     links: [
       { label: "공모전 보기", href: "https://www.wevity.com/" },
@@ -33,7 +42,7 @@ const DEFAULT_CONTESTS: ContestInfo[] = [
     id: "contest-public-data",
     name: "공공데이터 활용 창업 경진대회",
     date: "2026.07.15 - 2026.09.02",
-    reason: "학교·지역·채용 데이터를 묶어 학생 맞춤 추천 서비스로 발전시키기 좋아요.",
+    reason: "학교, 지역, 진로 데이터를 묶어 학생 맞춤 추천 서비스로 발전시키기 좋아요.",
     poster: "",
     links: [
       { label: "공공데이터", href: "https://www.data.go.kr/" },
@@ -55,35 +64,93 @@ const DEFAULT_CONTESTS: ContestInfo[] = [
   },
 ];
 
-function readLocal() {
+function readLocal<T>(key: string, fallback: T): T {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as ContestInfo[]) : DEFAULT_CONTESTS;
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
-    return DEFAULT_CONTESTS;
+    return fallback;
   }
 }
 
-function writeLocal(contests: ContestInfo[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(contests));
+function writeLocal<T>(key: string, value: T) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function normalizeContest(raw: Partial<ContestInfo> & { id?: string }, fallbackId: string): ContestInfo {
+  const links = Array.isArray(raw.links) ? raw.links : [];
+  return {
+    id: raw.id || fallbackId,
+    name: raw.name || "이름 없는 공모전",
+    date: raw.date || "일정 미정",
+    reason: raw.reason || "관리자 페이지에서 AI 추천 이유를 입력해 주세요.",
+    poster: raw.poster || "",
+    links: [
+      links[0] || { label: "링크 1", href: "" },
+      links[1] || { label: "링크 2", href: "" },
+      links[2] || { label: "링크 3", href: "" },
+    ],
+  };
 }
 
 export async function getContests(): Promise<ContestInfo[]> {
   try {
-    const snap = await getDoc(doc(db, "planpickMvp", "contests"));
-    if (!snap.exists()) return readLocal();
-    const items = snap.data().items;
-    if (!Array.isArray(items)) return readLocal();
-    writeLocal(items as ContestInfo[]);
-    return items as ContestInfo[];
+    const collectionSnap = await getDocs(collection(db, "contests"));
+    const collectionItems = collectionSnap.docs.map((snap) => normalizeContest({ id: snap.id, ...snap.data() }, snap.id));
+    if (collectionItems.length > 0) {
+      writeLocal(STORAGE_KEY, collectionItems);
+      return collectionItems;
+    }
   } catch {
-    return readLocal();
+    // Use legacy document or local backup when Firestore is unavailable.
   }
+
+  try {
+    const snap = await getDoc(doc(db, "planpickMvp", "contests"));
+    if (snap.exists() && Array.isArray(snap.data().items)) {
+      const items = snap.data().items.map((item: Partial<ContestInfo>, index: number) => normalizeContest(item, `contest-${index}`));
+      writeLocal(STORAGE_KEY, items);
+      return items;
+    }
+  } catch {
+    // Local fallback below.
+  }
+
+  return readLocal(STORAGE_KEY, DEFAULT_CONTESTS);
 }
 
 export async function saveContests(contests: ContestInfo[]) {
-  writeLocal(contests);
-  await setDoc(doc(db, "planpickMvp", "contests"), { items: contests });
+  writeLocal(STORAGE_KEY, contests);
+  await setDoc(doc(db, "planpickMvp", "contests"), { items: contests }, { merge: true });
+  await Promise.all(contests.map((contest) => setDoc(doc(db, "contests", contest.id), contest, { merge: true })));
+}
+
+export async function getContestRequests(): Promise<ContestRequest[]> {
+  try {
+    const snap = await getDoc(doc(db, "planpickMvp", "contestRequests"));
+    if (snap.exists() && Array.isArray(snap.data().items)) {
+      const items = snap.data().items as ContestRequest[];
+      writeLocal(REQUEST_STORAGE_KEY, items);
+      return items;
+    }
+  } catch {
+    // Local fallback below.
+  }
+
+  return readLocal(REQUEST_STORAGE_KEY, []);
+}
+
+export async function addContestRequest(text: string) {
+  const request: ContestRequest = {
+    id: `contest-request-${Date.now()}`,
+    text,
+    createdAt: Date.now(),
+    status: "pending",
+  };
+  const list = [request, ...(await getContestRequests())];
+  writeLocal(REQUEST_STORAGE_KEY, list);
+  await setDoc(doc(db, "planpickMvp", "contestRequests"), { items: list }, { merge: true });
+  return request;
 }
 
 export function makeBlankContest(): ContestInfo {

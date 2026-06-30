@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,6 +10,7 @@ import NeedsPage from "@/pages/NeedsPage";
 import WaitingPage from "@/pages/WaitingPage";
 import ResultPage from "@/pages/ResultPage";
 import ContestsPage from "@/pages/ContestsPage";
+import ContestSearchPage from "@/pages/ContestSearchPage";
 import AuthPage from "@/pages/AuthPage";
 import AdminPage from "@/pages/AdminPage";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -41,6 +43,7 @@ function Layout() {
             <Route path="/" component={Home} />
             <Route path="/request" component={RequestPage} />
             <Route path="/results" component={ResultPage} />
+            <Route path="/contests/search" component={ContestSearchPage} />
             <Route path="/contests" component={ContestsPage} />
             <Route path="/login" component={AuthPage} />
             <Route path="/admin" component={AdminPage} />
@@ -53,6 +56,16 @@ function Layout() {
 }
 
 function App() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const restoredPath = params.get("p");
+    if (!restoredPath) return;
+
+    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+    window.history.replaceState(null, "", `${base}${restoredPath}`);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

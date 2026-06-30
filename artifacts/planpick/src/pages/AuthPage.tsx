@@ -3,6 +3,13 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { LogIn, UserPlus } from "lucide-react";
 
+type StoredUser = {
+  userId: string;
+  name: string;
+  passwordHash: string;
+  createdAt?: number;
+};
+
 async function hashPassword(password: string) {
   const bytes = new TextEncoder().encode(password);
   const hash = await crypto.subtle.digest("SHA-256", bytes);
@@ -11,8 +18,25 @@ async function hashPassword(password: string) {
     .join("");
 }
 
+function readLocalUsers(): Record<string, StoredUser> {
+  try {
+    return JSON.parse(localStorage.getItem("planpickUsers") || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function writeLocalUser(user: StoredUser) {
+  const users = readLocalUsers();
+  users[user.userId] = user;
+  localStorage.setItem("planpickUsers", JSON.stringify(users));
+  localStorage.setItem("planpickUser", JSON.stringify({ userId: user.userId, name: user.name }));
+  window.dispatchEvent(new Event("planpick-user-change"));
+}
+
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [name, setName] = useState("");
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -21,55 +45,53 @@ export default function AuthPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const id = userId.trim();
-    if (!id || !password) {
-      setMessage("아이디와 비밀번호를 입력해주세요.");
+    const cleanName = name.trim();
+
+    if (!id || !password || (mode === "signup" && !cleanName)) {
+      setMessage(mode === "signup" ? "이름, 아이디, 비밀번호를 입력해 주세요." : "아이디와 비밀번호를 입력해 주세요.");
       return;
     }
 
     setLoading(true);
     setMessage("");
+
+    const passwordHash = await hashPassword(password);
+    const userRef = doc(db, "planpickMvp", "users");
+
     try {
-      const userRef = doc(db, "planpickMvp", "users");
       const snap = await getDoc(userRef);
-      const users = (snap.exists() && typeof snap.data().users === "object" ? snap.data().users : {}) as Record<string, { passwordHash: string }>;
-      const passwordHash = await hashPassword(password);
+      const users = (snap.exists() && typeof snap.data().users === "object" ? snap.data().users : {}) as Record<string, StoredUser>;
 
       if (mode === "signup") {
         if (users[id]) {
           setMessage("이미 사용 중인 아이디입니다.");
           return;
         }
-        const nextUsers = {
-          ...users,
-          [id]: { userId: id, passwordHash, createdAt: Date.now() },
-        };
-        await setDoc(userRef, { users: nextUsers, updatedAt: serverTimestamp() }, { merge: true });
-        localStorage.setItem("planpickUser", JSON.stringify({ userId: id }));
-        setMessage("회원가입이 완료되었습니다.");
+
+        const user: StoredUser = { userId: id, name: cleanName, passwordHash, createdAt: Date.now() };
+        await setDoc(userRef, { users: { ...users, [id]: user }, updatedAt: serverTimestamp() }, { merge: true });
+        writeLocalUser(user);
+        setMessage("회원가입이 완료되었습니다. 오른쪽 프로필에 이름이 표시돼요.");
         setMode("login");
       } else {
-        if (!users[id] || users[id].passwordHash !== passwordHash) {
+        const user = users[id];
+        if (!user || user.passwordHash !== passwordHash) {
           setMessage("아이디 또는 비밀번호가 맞지 않습니다.");
           return;
         }
-        localStorage.setItem("planpickUser", JSON.stringify({ userId: id }));
+        writeLocalUser(user);
         setMessage("로그인되었습니다.");
       }
     } catch {
-      const passwordHash = await hashPassword(password);
       if (mode === "signup") {
-        const raw = localStorage.getItem("planpickUsers");
-        const users = raw ? JSON.parse(raw) : {};
-        users[id] = { userId: id, passwordHash, createdAt: Date.now() };
-        localStorage.setItem("planpickUsers", JSON.stringify(users));
-        localStorage.setItem("planpickUser", JSON.stringify({ userId: id }));
-        setMessage("회원가입이 완료되었습니다. Firebase 권한이 막혀 로컬에도 백업했어요.");
+        const user: StoredUser = { userId: id, name: cleanName, passwordHash, createdAt: Date.now() };
+        writeLocalUser(user);
+        setMessage("Firebase 권한 문제로 로컬에 백업 저장했어요. Firestore 규칙을 확인해 주세요.");
       } else {
-        const raw = localStorage.getItem("planpickUsers");
-        const users = raw ? JSON.parse(raw) : {};
-        if (users[id]?.passwordHash === passwordHash) {
-          localStorage.setItem("planpickUser", JSON.stringify({ userId: id }));
-          setMessage("로그인되었습니다. Firebase 권한이 막혀 로컬 백업으로 확인했어요.");
+        const user = readLocalUsers()[id];
+        if (user?.passwordHash === passwordHash) {
+          writeLocalUser(user);
+          setMessage("로그인되었습니다. Firebase 권한 문제로 로컬 백업을 사용했어요.");
         } else {
           setMessage("아이디 또는 비밀번호가 맞지 않습니다.");
         }
@@ -87,7 +109,9 @@ export default function AuthPage() {
             {mode === "login" ? <LogIn className="h-7 w-7" /> : <UserPlus className="h-7 w-7" />}
           </div>
           <h1 className="text-3xl font-black text-slate-950">{mode === "login" ? "로그인" : "회원가입"}</h1>
-          <p className="mt-2 text-sm font-bold text-slate-400">아이디와 비밀번호만 입력하면 됩니다.</p>
+          <p className="mt-2 text-sm font-bold text-slate-400">
+            {mode === "login" ? "아이디와 비밀번호로 로그인해요." : "이름, 아이디, 비밀번호를 입력해 주세요."}
+          </p>
         </div>
 
         <div className="mb-5 grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
@@ -108,6 +132,18 @@ export default function AuthPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === "signup" && (
+            <div>
+              <label className="mb-2 block text-sm font-black text-slate-800">이름</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-12 w-full rounded-2xl border border-slate-200 px-4 text-sm font-bold outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                placeholder="이름"
+              />
+            </div>
+          )}
+
           <div>
             <label className="mb-2 block text-sm font-black text-slate-800">아이디</label>
             <input
@@ -128,9 +164,7 @@ export default function AuthPage() {
             />
           </div>
 
-          {message && (
-            <p className="rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-bold text-indigo-600">{message}</p>
-          )}
+          {message && <p className="rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-bold text-indigo-600">{message}</p>}
 
           <button
             type="submit"

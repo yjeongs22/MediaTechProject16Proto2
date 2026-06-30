@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { ArrowUpRight, Award, BriefcaseBusiness, CalendarDays, GraduationCap, Link as LinkIcon, Sparkles } from "lucide-react";
+import { useLocation } from "wouter";
+import { ArrowUpRight, Award, BriefcaseBusiness, CalendarDays, GraduationCap, Link as LinkIcon, Search, Sparkles } from "lucide-react";
 import { getContests, type ContestInfo } from "@/lib/contests";
 
 const careerItems = [
-  { icon: BriefcaseBusiness, title: "채용 정보", text: "AI 서비스 기획 인턴, 데이터 분석 인턴, 프론트엔드 인턴" },
-  { icon: GraduationCap, title: "자격증 정보", text: "ADsP, SQLD, 정보처리기사, 컴퓨터활용능력" },
-  { icon: Award, title: "추천 준비물", text: "포트폴리오 1장, GitHub 링크, 팀 역할 정리" },
+  { icon: BriefcaseBusiness, title: "채용 정보", text: "AI 서비스 기획 인턴, 데이터 분석 인턴, 프론트엔드 인턴 공고를 모아볼 예정이에요." },
+  { icon: GraduationCap, title: "자격증 정보", text: "ADsP, SQLD, 정보처리기사, 컴퓨터활용능력처럼 전공과 연결되는 자격증을 준비해요." },
+  { icon: Award, title: "추천 준비물", text: "포트폴리오 1장, GitHub 링크, 지원 동기 정리처럼 바로 챙길 수 있는 항목을 보여줘요." },
 ];
 
 export default function ContestsPage() {
+  const [, setLocation] = useLocation();
   const [contests, setContests] = useState<ContestInfo[]>([]);
   const [selected, setSelected] = useState<ContestInfo | null>(null);
 
@@ -22,15 +24,25 @@ export default function ContestsPage() {
   return (
     <div className="min-h-full bg-[#F4F2FF] px-6 py-8 md:px-10 lg:px-14">
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-7">
-        <div>
-          <p className="mb-2 flex items-center gap-2 text-sm font-black text-[#6B5DF6]">
-            <Sparkles className="h-4 w-4" />
-            AI 맞춤 비교
-          </p>
-          <h1 className="text-[36px] font-black text-slate-950 md:text-[44px]">공모전 바로가기</h1>
-          <p className="mt-3 max-w-2xl text-base font-bold text-slate-500">
-            PlanPick이 학생 활동과 진로 준비에 어울리는 공모전, 채용, 자격증 정보를 한 번에 보여줍니다.
-          </p>
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <p className="mb-2 flex items-center gap-2 text-sm font-black text-[#6B5DF6]">
+              <Sparkles className="h-4 w-4" />
+              AI 맞춤 비교
+            </p>
+            <h1 className="text-[36px] font-black text-slate-950 md:text-[44px]">공모전 바로가기</h1>
+            <p className="mt-3 max-w-2xl text-base font-bold text-slate-500">
+              관리자 페이지에서 등록한 공모전 포스터를 먼저 보여주고, 클릭하면 신청 날짜와 추천 이유를 확인할 수 있어요.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setLocation("/contests/search")}
+            className="inline-flex items-center justify-center rounded-2xl bg-[#5538F2] px-5 py-3 text-sm font-black text-white shadow-[0_12px_20px_rgba(85,56,242,0.25)]"
+          >
+            <Search className="mr-2 h-4 w-4" />
+            AI 추천 검색
+          </button>
         </div>
 
         <div className="grid gap-5 lg:grid-cols-3">
@@ -39,9 +51,11 @@ export default function ContestsPage() {
               type="button"
               key={contest.id}
               onClick={() => setSelected(contest)}
-              className="overflow-hidden rounded-3xl bg-white text-left shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100 transition-transform hover:-translate-y-1"
+              className={`overflow-hidden rounded-3xl bg-white text-left shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 transition-transform hover:-translate-y-1 ${
+                selected?.id === contest.id ? "ring-2 ring-[#6B5DF6]" : "ring-slate-100"
+              }`}
             >
-              <div className="relative h-64 bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
+              <div className="relative h-72 bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
                 {contest.poster ? (
                   <img src={contest.poster} alt={`${contest.name} 포스터`} className="h-full w-full object-cover" />
                 ) : (
@@ -49,10 +63,8 @@ export default function ContestsPage() {
                     {contest.name || "공모전 포스터"}
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-                <div className="absolute right-5 top-5 rounded-full bg-white/20 px-3 py-1 text-xs font-black">
-                  PICK {index + 1}
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                <div className="absolute right-5 top-5 rounded-full bg-white/20 px-3 py-1 text-xs font-black">PICK {index + 1}</div>
                 <div className="absolute bottom-5 left-5 right-5">
                   <p className="mb-2 text-sm font-bold text-white/80">PlanPick Contest</p>
                   <h2 className="text-2xl font-black leading-tight">{contest.name}</h2>
@@ -85,17 +97,17 @@ export default function ContestsPage() {
                   <p className="text-sm font-bold leading-relaxed text-slate-600">{selected.reason}</p>
                 </div>
                 <div className="grid gap-2">
-                  {selected.links.map((link) => (
+                  {selected.links.map((link, index) => (
                     <a
-                      key={link.label}
-                      href={link.href}
+                      key={`${link.label}-${index}`}
+                      href={link.href || "#"}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2 text-sm font-black text-slate-600 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
                     >
                       <span className="flex items-center gap-2">
                         <LinkIcon className="h-3.5 w-3.5" />
-                        {link.label}
+                        {link.label || `링크 ${index + 1}`}
                       </span>
                       <ArrowUpRight className="h-4 w-4" />
                     </a>
@@ -107,11 +119,9 @@ export default function ContestsPage() {
         )}
 
         <section className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-black text-slate-900">진로 정보 미리보기</h2>
-              <p className="mt-1 text-sm font-bold text-slate-400">공지사항 카드처럼 가볍게 훑어보는 정보 영역입니다.</p>
-            </div>
+          <div className="mb-5">
+            <h2 className="text-xl font-black text-slate-900">진로 정보 미리보기</h2>
+            <p className="mt-1 text-sm font-bold text-slate-400">원래 공지사항 카드처럼 가볍게 보여주는 정보 영역이에요.</p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {careerItems.map(({ icon: Icon, title, text }) => (

@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function () {
+        var repo = "/MediaTechProject16Proto2";
+        var path = location.pathname;
+        var rest = path.indexOf(repo) === 0 ? path.slice(repo.length) : path;
+        location.replace(repo + "/?p=" + encodeURIComponent(rest + location.search + location.hash));
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
