@@ -16,13 +16,13 @@ export function HeroSection() {
 
       <h1 className="mb-6 text-5xl font-bold leading-[1.15] tracking-tight md:text-6xl">
         <span className="block text-slate-900" style={{ fontFamily: "PlanPickPretendard", fontWeight: 700 }}>
-          똑똑한
+          더 스마트한
         </span>
         <span className="block text-indigo-600" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>
           수강신청,
         </span>
         <span className="block text-slate-900" style={{ fontFamily: "PlanPickPretendard", fontWeight: 700 }}>
-          AI와 함께
+          더 완벽한 학기
         </span>
       </h1>
 
