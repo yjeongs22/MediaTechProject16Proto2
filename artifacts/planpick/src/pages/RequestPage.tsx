@@ -64,39 +64,39 @@ export default function RequestPage() {
   }
 
   const inputClass =
-    "h-12 w-full rounded-2xl border border-[#D8D8E0] bg-white px-4 text-[14px] font-bold text-slate-900 outline-none transition-all placeholder:text-[#A1A5B4] focus:border-[#6D5DF4] focus:ring-4 focus:ring-[#6D5DF4]/10";
+    "h-10 w-full rounded-xl border border-[#D8D8E0] bg-white px-3.5 text-[13px] font-bold text-slate-900 outline-none transition-all placeholder:text-[#A1A5B4] focus:border-[#6D5DF4] focus:ring-4 focus:ring-[#6D5DF4]/10";
   const errorInputClass = "border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-100";
 
   return (
     <div className="min-h-full bg-[#F4F2FF] px-6 py-6 md:px-10 lg:px-14">
-      <div className="mx-auto w-full max-w-[1280px]">
-        <div className="mb-6 flex items-center gap-6">
+      <div className="mx-auto w-full max-w-[1120px]">
+        <div className="mb-5 flex items-center gap-5">
           <button
             type="button"
             onClick={() => setLocation("/")}
             data-testid="btn-back-home"
-            className="flex h-11 items-center gap-1.5 rounded-2xl bg-[#ECE9FA] px-4 text-[15px] font-black text-slate-900 transition-colors hover:bg-[#E4DFFA]"
+            className="flex h-10 items-center gap-1.5 rounded-2xl bg-[#ECE9FA] px-3.5 text-[14px] font-black text-slate-900 transition-colors hover:bg-[#E4DFFA]"
           >
             <ArrowLeft className="h-4 w-4" />
             뒤로
           </button>
-          <h2 className="text-[26px] font-black text-[#6B5DF6]">기본 정보 입력</h2>
+          <h2 className="text-[24px] font-black text-[#6B5DF6]">기본 정보 입력</h2>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-[28px] bg-white/92 px-8 py-9 shadow-[0_14px_35px_rgba(42,33,95,0.08)] ring-1 ring-[#ECEAF5] backdrop-blur md:px-12"
+          className="rounded-[24px] bg-white/92 px-7 py-8 shadow-[0_14px_35px_rgba(42,33,95,0.08)] ring-1 ring-[#ECEAF5] backdrop-blur md:px-10"
         >
-          <div className="mb-10">
-            <h1 className="text-[44px] font-black leading-tight text-black md:text-[52px]">기본 정보 입력</h1>
-            <p className="mt-5 text-[18px] font-bold text-[#9296A5] md:text-[21px]">
+          <div className="mb-8">
+            <h1 className="text-[36px] font-black leading-tight text-black md:text-[42px]">기본 정보 입력</h1>
+            <p className="mt-4 text-[16px] font-bold text-[#9296A5] md:text-[17px]">
               학교와 학과 정보를 입력하면 AI가 졸업요건과 수강 데이터를 분석하여 최적의 시간표를 추천합니다.
             </p>
           </div>
 
-          <div className="grid gap-x-6 gap-y-7 md:grid-cols-2">
+          <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
             <div>
-              <label className="mb-2.5 block text-[18px] font-black text-black">학교</label>
+              <label className="mb-2 block text-[15px] font-black text-black">학교</label>
               <input
                 data-testid="input-school"
                 value={school}
@@ -108,7 +108,7 @@ export default function RequestPage() {
             </div>
 
             <div>
-              <label className="mb-2.5 block text-[18px] font-black text-black">학과</label>
+              <label className="mb-2 block text-[15px] font-black text-black">학과</label>
               <input
                 data-testid="input-major"
                 value={major}
@@ -120,7 +120,7 @@ export default function RequestPage() {
             </div>
 
             <div>
-              <label className="mb-2.5 block text-[18px] font-black text-black">학번</label>
+              <label className="mb-2 block text-[15px] font-black text-black">학번</label>
               <input
                 data-testid="input-student-number"
                 value={studentNumber}
@@ -131,7 +131,7 @@ export default function RequestPage() {
             </div>
 
             <div>
-              <label className="mb-2.5 block text-[18px] font-black text-black">학년</label>
+              <label className="mb-2 block text-[15px] font-black text-black">학년</label>
               <select
                 data-testid="select-grade"
                 value={grade}
@@ -148,8 +148,8 @@ export default function RequestPage() {
             </div>
           </div>
 
-          <div className="mt-8">
-            <label className="mb-2.5 block text-[18px] font-black text-black">이번 학기 목표 학점</label>
+          <div className="mt-6">
+            <label className="mb-2 block text-[15px] font-black text-black">이번 학기 목표 학점</label>
             <select
               value={targetCredit}
               onChange={(e) => setTargetCredit(Number(e.target.value))}
@@ -163,10 +163,10 @@ export default function RequestPage() {
               ))}
             </select>
 
-            <div className="mt-6 rounded-[20px] border border-[#E4E1F0] bg-[#F8F5FF] px-6 py-5">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-[28px] font-black text-[#6B5DF6]">{creditValue}학점</span>
-                <span className="text-[18px] font-black text-[#9699A8]">1-{overToggle ? "40" : "21"}학점</span>
+            <div className="mt-5 rounded-[18px] border border-[#E4E1F0] bg-[#F8F5FF] px-5 py-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-[22px] font-black text-[#6B5DF6]">{creditValue}학점</span>
+                <span className="text-[15px] font-black text-[#9699A8]">1-{overToggle ? "40" : "21"}학점</span>
               </div>
 
               <input
@@ -181,23 +181,23 @@ export default function RequestPage() {
                 style={{ "--range-progress": rangeProgress } as React.CSSProperties}
               />
 
-              <div className="mt-5 flex flex-wrap items-center gap-4">
+              <div className="mt-4 flex flex-wrap items-center gap-3">
                 <button
                   data-testid="toggle-over-credit"
                   type="button"
                   aria-pressed={overToggle}
                   onClick={() => setOverToggle((value) => !value)}
-                  className={`relative h-9 w-[72px] rounded-full transition-all ${
+                  className={`relative h-8 w-16 rounded-full transition-all ${
                     overToggle ? "bg-[#6B5DF6]" : "bg-[#D9D9E8] shadow-inner"
                   }`}
                 >
                   <span
-                    className={`absolute top-1 h-7 w-7 rounded-full bg-white shadow-[0_2px_8px_rgba(45,39,80,0.24)] transition-all ${
-                      overToggle ? "left-10" : "left-1"
+                    className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_2px_8px_rgba(45,39,80,0.24)] transition-all ${
+                      overToggle ? "left-9" : "left-1"
                     }`}
                   />
                 </button>
-                <span className="text-[18px] font-black text-[#9A9EAD]">22학점 이상</span>
+                <span className="text-[15px] font-black text-[#9A9EAD]">22학점 이상</span>
 
                 {overToggle && (
                   <div className="flex items-center gap-2">
