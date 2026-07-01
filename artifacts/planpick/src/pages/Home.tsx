@@ -3,42 +3,30 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { TimetableCard } from "@/components/home/TimetableCard";
 import { AIPromoCard } from "@/components/home/AIPromoCard";
 import { LiveStatusCard } from "@/components/home/LiveStatusCard";
-import { WeatherCard } from "@/components/home/WeatherCard";
+import { NoticesCard } from "@/components/home/NoticesCard";
 import { FeatureIcons } from "@/components/home/FeatureIcons";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#F0F2F8] p-6 md:p-8 lg:p-10 font-sans">
-      <div className="max-w-[1200px] mx-auto flex flex-col gap-8">
-        
-        {/* Top Section: Hero + Floating Cards Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-          
-          {/* Left: Hero Typography */}
-          <div className="lg:col-span-5 h-full">
+    <div className="min-h-screen overflow-hidden bg-[#F3F4F8] p-6 font-sans md:p-8 lg:p-10">
+      <div className="pointer-events-none fixed right-0 top-0 -z-10 h-[600px] w-[800px] translate-x-1/4 -translate-y-1/4 rounded-full bg-[#F2EFFF] opacity-60 blur-[100px]" />
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-10">
+        <div className="flex flex-col items-stretch gap-8 xl:flex-row">
+          <div className="z-10 flex min-w-[320px] flex-1 flex-col justify-center">
             <HeroSection />
           </div>
-          
-          {/* Right: Timetable Image */}
-          <div className="lg:col-span-7 flex items-center justify-center">
+          <div className="relative flex min-h-[400px] flex-[1.5] items-center justify-center">
             <TimetableCard />
           </div>
         </div>
 
-        {/* Middle Section: AI Promo + Status + Notices */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
-          <div className="lg:col-span-6">
-            <AIPromoCard />
-          </div>
-          <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-[1.15fr_1fr] gap-6">
-            <LiveStatusCard />
-            <WeatherCard />
-          </div>
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <AIPromoCard />
+          <LiveStatusCard />
+          <NoticesCard />
         </div>
 
-        {/* Bottom Section: Feature Icons */}
         <FeatureIcons />
-        
       </div>
     </div>
   );
