@@ -27,6 +27,9 @@ export function AIPromoCard() {
       <div className="absolute bottom-0 right-0 z-0 h-56 w-48 translate-x-4 translate-y-4">
         <img src={`${import.meta.env.BASE_URL}ai-robot.png`} alt="AI Robot" className="h-full w-full translate-x-4 translate-y-4 object-contain object-bottom" />
       </div>
+      <div className="absolute right-36 top-8 z-10 animate-bounce rounded-2xl rounded-br-sm bg-white px-3 py-1.5 text-xs font-bold text-[#5B4CF2] shadow-sm">
+        ...
+      </div>
     </button>
   );
 }
