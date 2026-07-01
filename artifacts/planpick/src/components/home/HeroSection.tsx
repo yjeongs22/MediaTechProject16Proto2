@@ -14,7 +14,9 @@ export function HeroSection() {
       <h1 className="mb-6 text-5xl font-extrabold leading-[1.2] tracking-tight text-[#1F1543] lg:text-6xl">
         스마트한
         <br />
-        <span className="text-[#5B4CF2]">수강신청</span>,
+        <span className="text-[#5B4CF2]" style={{ fontFamily: "PlanPickAggro" }}>
+          수강신청,
+        </span>
         <br />
         AI가 챙기기
       </h1>
@@ -29,7 +31,7 @@ export function HeroSection() {
           onClick={() => setLocation("/request")}
           className="flex items-center gap-3 rounded-full bg-[#C1FE42] px-6 py-4 font-bold text-[#1F1543] transition-all hover:-translate-y-0.5 hover:shadow-lg"
         >
-          최적 시간표 추천받기
+          공모전 바로가기
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1F1543] text-white">
             <ArrowRight className="h-4 w-4" />
           </span>
