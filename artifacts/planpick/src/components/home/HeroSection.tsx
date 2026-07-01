@@ -28,7 +28,7 @@ export function HeroSection() {
       <div className="flex flex-wrap items-center gap-4">
         <button
           type="button"
-          onClick={() => setLocation("/request")}
+          onClick={() => setLocation("/contests")}
           className="flex items-center gap-3 rounded-full bg-[#C1FE42] px-6 py-4 font-bold text-[#1F1543] transition-all hover:-translate-y-0.5 hover:shadow-lg"
         >
           공모전 바로가기
