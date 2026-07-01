@@ -111,10 +111,14 @@ function firstMedia(raw: Raw) {
     "posterImage",
     "posterImageUrl",
     "posterImageURL",
+    "posterDataUrl",
+    "posterDataURL",
     "posterSrc",
     "image",
     "imageUrl",
     "imageURL",
+    "imageDataUrl",
+    "imageDataURL",
     "imageSrc",
     "thumbnail",
     "thumbnailUrl",
@@ -173,7 +177,7 @@ function normalizeLinks(raw: Raw): ContestLink[] {
   const directLinks = [
     {
       label: firstText(raw, ["link1Label", "url1Label"], "링크 1"),
-      href: firstText(raw, ["link1", "url1", "homepage", "siteUrl", "site", "website", "링크1"], ""),
+      href: firstText(raw, ["link1", "url1", "homepageUrl", "homepageURL", "homepage", "siteUrl", "site", "website", "링크1"], ""),
     },
     {
       label: firstText(raw, ["link2Label", "url2Label"], "링크 2"),
@@ -196,7 +200,7 @@ function normalizeContest(raw: Raw, fallbackId: string): ContestInfo {
   return {
     id: firstText(raw, ["id", "contestId"], fallbackId),
     name: firstText(raw, ["name", "title", "contestName", "competitionName", "공모전이름", "공모전명"], "이름 없는 공모전"),
-    date: firstText(raw, ["date", "period", "applicationDate", "applicationPeriod", "deadline", "dueDate", "startDate", "endDate", "신청날짜", "신청기간"], "일정 미정"),
+    date: firstText(raw, ["date", "period", "applyDate", "applicationDate", "applicationPeriod", "deadline", "dueDate", "startDate", "endDate", "신청날짜", "신청기간"], "일정 미정"),
     reason: firstText(raw, ["reason", "aiReason", "recommendReason", "recommendationReason", "description", "summary", "추천이유"], "AI 추천 이유가 아직 등록되지 않았어요."),
     poster: firstMedia(raw),
     links: normalizeLinks(raw),
