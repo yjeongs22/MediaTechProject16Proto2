@@ -43,6 +43,15 @@ jobs:
           PORT: 5173
           BASE_PATH: /MediaTechProject16Proto2/
 
+      - name: Add GitHub Pages route entries
+        run: |
+          cd artifacts/planpick/dist/public
+          touch .nojekyll
+          for route in contests results request request/needs request/waiting login mypage notifications graduation chat courses search settings; do
+            mkdir -p "$route"
+            cp index.html "$route/index.html"
+          done
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
