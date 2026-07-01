@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { AlertTriangle, ArrowLeft, Box, CheckCircle, Download, Minus, Plus, RotateCcw, Star, ThumbsUp, Users, X } from "lucide-react";
 import { getCurrentUserName } from "@/lib/auth";
 import { getCoursesAsync, type Course, type CourseSchedule } from "@/lib/courses";
+import { getMicroDegrees, type MicroDegreeInfo } from "@/lib/microDegrees";
 import { getCurrentRequestId, getRequestById, type PlanData, type PlanpickRequest } from "@/lib/storage";
 
 const DAYS = ["월", "화", "수", "목", "금"];
@@ -256,10 +257,38 @@ function CourseList({ courses, onCourseClick }: { courses: Course[]; onCourseCli
   );
 }
 
+function MicroDegreeRecommendation({ userName, microDegree }: { userName: string; microDegree: MicroDegreeInfo | null }) {
+  if (!microDegree) return null;
+
+  return (
+    <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-black text-[#6B5DF6]">{userName}님을 위한 MD 추천</p>
+          <h3 className="mt-1 text-2xl font-black text-slate-950">{microDegree.name}</h3>
+        </div>
+        <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-600">Micro Degree</span>
+      </div>
+      <p className="rounded-2xl bg-[#F5F3FF] px-4 py-3 text-sm font-bold leading-relaxed text-slate-600">{microDegree.summary}</p>
+      <p className="mt-3 text-sm font-bold leading-relaxed text-slate-500">{microDegree.reason}</p>
+      {microDegree.courses.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {microDegree.courses.slice(0, 5).map((course) => (
+            <span key={course} className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#6B5DF6] ring-1 ring-indigo-100">
+              #{course}
+            </span>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function ResultPage() {
   const [, setLocation] = useLocation();
   const [request, setRequest] = useState<PlanpickRequest | null>(null);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [microDegrees, setMicroDegrees] = useState<MicroDegreeInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<PlanKey>("plan1");
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -268,9 +297,10 @@ export default function ResultPage() {
   useEffect(() => {
     async function load() {
       const id = getCurrentRequestId();
-      const [courses, req] = await Promise.all([getCoursesAsync(), id ? getRequestById(id) : Promise.resolve(null)]);
+      const [courses, req, mdItems] = await Promise.all([getCoursesAsync(), id ? getRequestById(id) : Promise.resolve(null), getMicroDegrees()]);
       setAllCourses(courses);
       setRequest(req);
+      setMicroDegrees(mdItems);
       setLoading(false);
     }
     load();
@@ -279,6 +309,15 @@ export default function ResultPage() {
   const result = request?.result;
   const activePlan = activeTab !== "planB" ? result?.[activeTab] : null;
   const selectedCourses = useMemo(() => getPlanCourses(activePlan, allCourses), [activePlan, allCourses]);
+  const selectedMicroDegree = useMemo(() => {
+    if (microDegrees.length === 0) return null;
+    const courseNames = new Set(selectedCourses.map((course) => course.name));
+    return [...microDegrees].sort((a, b) => {
+      const aScore = a.courses.filter((course) => courseNames.has(course)).length;
+      const bScore = b.courses.filter((course) => courseNames.has(course)).length;
+      return bScore - aScore;
+    })[0];
+  }, [microDegrees, selectedCourses]);
   const totalCredits = selectedCourses.reduce((sum, course) => sum + (course.credit || 0), 0);
   const courseTypes = new Set(selectedCourses.map((course) => course.type)).size;
 
@@ -379,6 +418,7 @@ export default function ResultPage() {
             </section>
             <TimetableGrid courses={selectedCourses} onCourseClick={setSelectedCourse} />
             <CourseList courses={selectedCourses} onCourseClick={setSelectedCourse} />
+            <MicroDegreeRecommendation userName={userName} microDegree={selectedMicroDegree} />
           </>
         )}
 

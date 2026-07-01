@@ -20,7 +20,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px] xl:grid-cols-[minmax(0,1fr)_270px_190px]">
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px]">
           <AIPromoCard />
           <LiveStatusCard />
           <WeatherCard />
