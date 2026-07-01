@@ -35,7 +35,7 @@ export function HeroSection() {
       <div className="flex items-center gap-3">
         <Button
           onClick={() => setLocation("/contests")}
-          className="rounded-xl bg-[#DCFF59] px-6 py-6 text-base font-medium text-white shadow-md hover:bg-[#B0DB18]"
+          className="rounded-xl bg-[#DCFF59] px-6 py-6 text-base font-medium text-black shadow-md hover:bg-[#B0DB18]"
           data-testid="btn-contests"
         >
           공모전 바로가기
