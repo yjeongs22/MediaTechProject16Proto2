@@ -1,5 +1,5 @@
 import { db, ensureFirebaseAuth } from "./firebase";
-import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 
 const COLLECTION = "planpickMvp";
 
@@ -133,8 +133,25 @@ export function setCurrentRequestId(id: string) {
 }
 
 export async function getRequestList(): Promise<PlanpickRequest[]> {
-  const list = await getDataAsync<PlanpickRequest[]>("planpickRequests");
-  return Array.isArray(list) ? list : [];
+  const byId = new Map<string, PlanpickRequest>();
+
+  const legacyList = await getDataAsync<PlanpickRequest[]>("planpickRequests");
+  if (Array.isArray(legacyList)) {
+    legacyList.forEach((request) => byId.set(request.id, request));
+  }
+
+  try {
+    await ensureFirebaseAuth();
+    const snap = await withTimeout(getDocs(collection(db, "requests")), 5000);
+    snap.docs.forEach((requestDoc) => {
+      const request = { id: requestDoc.id, ...requestDoc.data() } as PlanpickRequest;
+      byId.set(request.id, request);
+    });
+  } catch (error) {
+    console.warn("requests collection read failed", error);
+  }
+
+  return Array.from(byId.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
 
 export async function upsertRequest(request: PlanpickRequest): Promise<void> {
@@ -146,9 +163,26 @@ export async function upsertRequest(request: PlanpickRequest): Promise<void> {
     list.push(request);
   }
   await setDataAsync("planpickRequests", list);
+
+  try {
+    await ensureFirebaseAuth();
+    await withTimeout(setDoc(doc(db, "requests", request.id), request, { merge: true }), 5000);
+  } catch (error) {
+    console.warn("request document write failed", error);
+  }
 }
 
 export async function getRequestById(id: string): Promise<PlanpickRequest | null> {
+  try {
+    await ensureFirebaseAuth();
+    const snap = await withTimeout(getDoc(doc(db, "requests", id)), 5000);
+    if (snap.exists()) {
+      return { id: snap.id, ...snap.data() } as PlanpickRequest;
+    }
+  } catch {
+    // Legacy/local fallback below.
+  }
+
   const list = await getRequestList();
   return list.find((r) => r.id === id) ?? null;
 }

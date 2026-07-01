@@ -46,10 +46,20 @@ export default function WaitingPage() {
     const id = getCurrentRequestId();
     if (!id) return;
 
-    let unsub = () => {};
+    let unsubRequest = () => {};
+    let unsubLegacy = () => {};
     ensureFirebaseAuth().then(() => {
+      unsubRequest = onSnapshot(doc(db, "requests", id), (snap) => {
+        if (!snap.exists()) return;
+        const found = { id: snap.id, ...snap.data() } as PlanpickRequest;
+        setRequest(found);
+        if (found.status === "complete" || String(found.status) === "?꾨즺") {
+          setComplete(true);
+        }
+      });
+
       const ref = doc(db, "planpickMvp", "requests");
-      unsub = onSnapshot(ref, (snap) => {
+      unsubLegacy = onSnapshot(ref, (snap) => {
       if (!snap.exists()) return;
       const data = snap.data();
       const items: PlanpickRequest[] = Array.isArray(data?.items) ? data.items : [];
@@ -61,7 +71,10 @@ export default function WaitingPage() {
       });
     });
 
-    return () => unsub();
+    return () => {
+      unsubRequest();
+      unsubLegacy();
+    };
   }, []);
 
   useEffect(() => {
