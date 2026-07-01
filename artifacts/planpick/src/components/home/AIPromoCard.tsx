@@ -14,7 +14,8 @@ export function AIPromoCard() {
       <div className="relative z-10 w-2/3">
         <h2 className="mb-2 text-2xl font-bold" >
           <span style={{ fontFamily: "PlanPickAggro", fontWeight: 700 }}>플랜픽</span>{" "}
-          <span className="font-extrabold italic text-[#C1FE42]">AI</span> 시간표
+          <span className="font-extrabold italic text-[#C1FE42]">AI</span>{" "}
+          <span className="text-sm font-semibold">시간표</span>
         </h2>
         <p className="mb-4 text-xs leading-relaxed text-white/80">
           학교ㆍ학과ㆍ학년만 입력하면
