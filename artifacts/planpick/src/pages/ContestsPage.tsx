@@ -53,12 +53,9 @@ export default function ContestsPage() {
             <Sparkles className="h-4 w-4" />
             AI 맞춤 비교
           </p>
-          <h1 className="text-[34px] font-black text-slate-950 md:text-[42px]">
+          <h1 className="text-[34px] font-black text-slate-950 md:text-[42px]" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>
             {userName}님을 위한 공모전 추천 완료했습니다!
           </h1>
-          <p className="mt-3 max-w-2xl text-base font-bold text-slate-500">
-            Firebase DB에 등록된 공모전 포스터와 링크를 불러와 보여줘요. 포스터를 누르면 상세 정보가 아래에 열립니다.
-          </p>
         </div>
 
         {loading && (
