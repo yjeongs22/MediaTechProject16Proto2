@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { TimetableCard } from "@/components/home/TimetableCard";
 import { AIPromoCard } from "@/components/home/AIPromoCard";
 import { LiveStatusCard } from "@/components/home/LiveStatusCard";
+import { MicroDegreeCard } from "@/components/home/MicroDegreeCard";
 import { WeatherCard } from "@/components/home/WeatherCard";
 import { FeatureIcons } from "@/components/home/FeatureIcons";
 
@@ -22,7 +23,10 @@ export default function Home() {
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px]">
           <AIPromoCard />
-          <LiveStatusCard />
+          <div className="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-2">
+            <LiveStatusCard />
+            <MicroDegreeCard />
+          </div>
           <WeatherCard />
         </div>
 
