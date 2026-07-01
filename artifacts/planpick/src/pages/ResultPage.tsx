@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
-import { AlertTriangle, ArrowLeft, BookOpen, Box, CheckCircle, Download, ExternalLink, GraduationCap, RotateCcw, Sparkles, Star, ThumbsUp, Users, X } from "lucide-react";
-import { getCourses, type Course } from "@/lib/courses";
+import { AlertTriangle, ArrowLeft, Box, CheckCircle, Download, GraduationCap, RotateCcw, Sparkles, Star, ThumbsUp, Users, X } from "lucide-react";
+import { getCoursesAsync, type Course } from "@/lib/courses";
 import { getCurrentRequestId, getRequestById, type PlanData, type PlanpickRequest } from "@/lib/storage";
 import { getCurrentUserName } from "@/lib/auth";
 
@@ -14,31 +14,27 @@ const PLAN_TABS = [
   { key: "planB" as const, label: "Plan B" },
 ];
 
-const COURSE_FALLBACK: Record<string, Partial<Course>> = {
-  "data-structure": { name: "자료구조", type: "전공필수", day: "월", start: "10:00", end: "12:00", room: "공학관 302호", credit: 3, color: "#A78BFA", review: "과제는 많지만 전공 기초를 잡기 좋아요.", syllabus: "스택, 큐, 리스트, 트리, 그래프 등 기본 자료구조를 학습합니다." },
-  "computer-arch": { name: "컴퓨터구조", type: "전공필수", day: "월", start: "14:00", end: "16:00", room: "공학관 405호", credit: 3, color: "#A78BFA", review: "시험 범위가 넓지만 개념 이해가 중요해요.", syllabus: "CPU 구조, 명령어 집합, 메모리 계층, 파이프라인을 다룹니다." },
-  "web-programming": { name: "웹프로그래밍", type: "전공선택", day: "수", start: "13:00", end: "15:00", room: "실습실 210호", credit: 3, color: "#C4B5FD", review: "실습 중심이라 결과물이 남는 수업이에요.", syllabus: "HTML, CSS, JavaScript 기반 웹 서비스 구현을 학습합니다." },
-  database: { name: "데이터베이스", type: "전공선택", day: "화", start: "10:00", end: "12:00", room: "공학관 302호", credit: 3, color: "#8BE26B", review: "SQL 실습이 많고 프로젝트에 도움이 돼요.", syllabus: "관계형 데이터베이스, SQL, 정규화, 트랜잭션을 학습합니다." },
-  english: { name: "교양영어", type: "교양", day: "화", start: "16:00", end: "17:00", room: "교양관 103호", credit: 2, color: "#F9CDD0", review: "부담은 적고 출석이 중요해요.", syllabus: "" },
-  creative: { name: "창의적사고", type: "교양", day: "금", start: "13:00", end: "15:00", room: "교양관 205호", credit: 2, color: "#FDE68A", review: "팀 발표가 있지만 학점 부담은 낮아요.", syllabus: "문제 해결, 아이디어 발상, 팀 기반 발표 활동을 진행합니다." },
-  "ai-basic": { name: "AI기초", type: "전공선택", day: "수", start: "09:00", end: "11:00", room: "AI융합관 301호", credit: 3, color: "#DDD6FE", review: "최근 관심도가 높은 과목이고 수학 기초가 있으면 좋아요.", syllabus: "인공지능 개념, 머신러닝 기초, 데이터 학습 과정을 다룹니다." },
-};
+type PlanKey = (typeof PLAN_TABS)[number]["key"];
 
-function normalizeCourse(course: Course): Course {
-  return { ...course, ...(COURSE_FALLBACK[course.id] || {}) } as Course;
+function cleanDay(day: string) {
+  const value = String(day || "").trim();
+  const found = DAYS.find((item) => value.includes(item));
+  return found || value.slice(0, 1);
 }
 
 function timeToRow(time: string) {
-  const [hour, minute] = time.split(":").map(Number);
-  return hour - 9 + (minute || 0) / 60;
+  const [hour, minute] = String(time || "09:00")
+    .split(":")
+    .map(Number);
+  return Math.max(0, (hour || 9) - 9 + (minute || 0) / 60);
 }
 
 function getReviews(course: Course) {
-  const base = course.review || "아직 강의평이 충분하지 않습니다.";
+  const base = course.review || "등록된 강의평이 없습니다.";
   return [
     base,
-    "수업 흐름이 비교적 명확하고 시험 전 정리가 중요해요.",
-    "과제와 출석을 꾸준히 챙기면 따라가기 괜찮다는 의견이 많아요.",
+    "수업 흐름과 과제량을 미리 확인하고 들어가면 따라가기 좋습니다.",
+    "출석, 과제, 시험 준비를 꾸준히 챙기는 학생에게 추천됩니다.",
   ];
 }
 
@@ -46,6 +42,23 @@ function getSummary(course: Course) {
   if (course.difficulty === "높음") return "한 줄 요약: 난이도는 있지만 전공 이해도 향상에 도움이 되는 과목입니다.";
   if (course.team === "있음") return "한 줄 요약: 팀 활동이 있어 일정 관리가 중요한 과목입니다.";
   return "한 줄 요약: 시간표 균형을 해치지 않으면서 챙기기 좋은 과목입니다.";
+}
+
+function matchCourse(courses: Course[], id: string) {
+  const key = String(id || "").trim().toLowerCase();
+  return courses.find((course) => {
+    return [course.id, course.courseCode, course.name]
+      .filter(Boolean)
+      .some((value) => String(value).trim().toLowerCase() === key);
+  });
+}
+
+function getPlanCourses(plan: PlanData | null | undefined, courses: Course[]) {
+  if (!courses.length) return [];
+  const ids = Array.isArray(plan?.courseIds) ? plan.courseIds : [];
+  const matched = ids.map((id) => matchCourse(courses, id)).filter(Boolean) as Course[];
+  if (matched.length > 0) return matched;
+  return courses.slice(0, Math.min(7, courses.length));
 }
 
 function CourseDetailModal({ course, onClose }: { course: Course; onClose: () => void }) {
@@ -61,7 +74,7 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
             <span className="mb-2 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-600">{course.type}</span>
             <h2 className="text-2xl font-black text-slate-950">{course.name}</h2>
             <p className="mt-1 text-sm font-bold text-slate-400">
-              {course.day} {course.start}~{course.end} ㅣ {course.room} ㅣ {course.credit}학점
+              {cleanDay(course.day)} {course.start}~{course.end} ㅣ {course.room || "강의실 미입력"} ㅣ {course.credit}학점
             </p>
           </div>
           <button onClick={onClose} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700" aria-label="닫기">
@@ -96,7 +109,7 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="min-h-36 rounded-2xl bg-slate-50 p-5 text-sm font-bold leading-relaxed text-slate-600">
+            <p className="min-h-36 whitespace-pre-line rounded-2xl bg-slate-50 p-5 text-sm font-bold leading-relaxed text-slate-600">
               {syllabus || "아직 등록되지 않았습니다."}
             </p>
           </div>
@@ -108,10 +121,10 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
 
 function TimetableGrid({ courses, onCourseClick }: { courses: Course[]; onCourseClick: (course: Course) => void }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-4">
+    <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
       <h3 className="mb-4 border-l-4 border-[#9D91F7] pl-3 text-lg font-black text-slate-900">추천 시간표</h3>
       <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
-        <div className="grid grid-cols-[70px_repeat(5,1fr)] border-b border-slate-100 bg-white text-center text-sm font-black text-slate-900">
+        <div className="grid grid-cols-[70px_repeat(5,1fr)] border-b border-slate-100 text-center text-sm font-black text-slate-900">
           <div />
           {DAYS.map((day) => (
             <div key={day} className="py-3">
@@ -136,7 +149,7 @@ function TimetableGrid({ courses, onCourseClick }: { courses: Course[]; onCourse
               </div>
             ))}
             {courses.map((course, index) => {
-              const dayIndex = DAYS.indexOf(course.day);
+              const dayIndex = DAYS.indexOf(cleanDay(course.day));
               if (dayIndex < 0) return null;
               const top = timeToRow(course.start) * 56;
               const height = Math.max(42, (timeToRow(course.end) - timeToRow(course.start)) * 56 - 4);
@@ -160,7 +173,7 @@ function TimetableGrid({ courses, onCourseClick }: { courses: Course[]; onCourse
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -169,25 +182,20 @@ function CourseList({ courses, onCourseClick }: { courses: Course[]; onCourseCli
     <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="border-l-4 border-[#9D91F7] pl-3 text-lg font-black text-slate-900">추천 과목 목록</h3>
-        <span className="text-sm font-black text-slate-400">전체보기 →</span>
+        <span className="text-sm font-black text-slate-400">총 {courses.length}개</span>
       </div>
-      <div className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-2">
         {courses.map((course) => (
-          <div key={course.id} className="grid grid-cols-[8px_1fr_auto_auto] items-center gap-3">
-            <span className="h-11 rounded-full" style={{ backgroundColor: course.color || "#9D91F7" }} />
+          <div key={course.id} className="grid grid-cols-[8px_1fr_auto] items-center gap-3 rounded-2xl border border-slate-100 p-3">
+            <span className="h-14 rounded-full" style={{ backgroundColor: course.color || "#9D91F7" }} />
             <div>
               <div className="flex items-center gap-2">
                 <h4 className="text-sm font-black text-slate-900">{course.name}</h4>
                 <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-black text-indigo-500">{course.type}</span>
               </div>
-              <p className="text-xs font-bold text-slate-400">
-                {course.start}~{course.end} ㅣ {course.day} ㅣ {course.room}
+              <p className="mt-1 text-xs font-bold text-slate-400">
+                {course.start}~{course.end} ㅣ {cleanDay(course.day)} ㅣ {course.room || "강의실 미입력"}
               </p>
-            </div>
-            <div className="hidden text-amber-400 md:block">
-              {[0, 1, 2, 3, 4].map((index) => (
-                <Star key={index} className="inline h-4 w-4 fill-current" />
-              ))}
             </div>
             <button onClick={() => onCourseClick(course)} className="rounded-full border border-slate-200 px-4 py-2 text-xs font-black text-slate-700">
               강의정보
@@ -202,16 +210,18 @@ function CourseList({ courses, onCourseClick }: { courses: Course[]; onCourseCli
 export default function ResultPage() {
   const [, setLocation] = useLocation();
   const [request, setRequest] = useState<PlanpickRequest | null>(null);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<(typeof PLAN_TABS)[number]["key"]>("plan1");
+  const [activeTab, setActiveTab] = useState<PlanKey>("plan1");
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const userName = getCurrentUserName() || "사용자";
-  const allCourses = useMemo(() => getCourses().map(normalizeCourse), []);
 
   useEffect(() => {
     async function load() {
       const id = getCurrentRequestId();
-      if (id) setRequest(await getRequestById(id));
+      const [courses, req] = await Promise.all([getCoursesAsync(), id ? getRequestById(id) : Promise.resolve(null)]);
+      setAllCourses(courses);
+      setRequest(req);
       setLoading(false);
     }
     load();
@@ -219,14 +229,9 @@ export default function ResultPage() {
 
   const result = request?.result;
   const activePlan = activeTab !== "planB" ? result?.[activeTab] : null;
-  const selectedCourses = useMemo(() => {
-    const ids = activePlan?.courseIds?.length ? activePlan.courseIds : ["data-structure", "database", "computer-arch", "web-programming", "english", "creative", "ai-basic"];
-    return ids.map((id) => allCourses.find((course) => course.id === id) || ({ id, ...COURSE_FALLBACK[id] } as Course)).filter(Boolean).map(normalizeCourse);
-  }, [activePlan, allCourses]);
-
+  const selectedCourses = useMemo(() => getPlanCourses(activePlan, allCourses), [activePlan, allCourses]);
   const totalCredits = selectedCourses.reduce((sum, course) => sum + (course.credit || 0), 0);
   const courseTypes = new Set(selectedCourses.map((course) => course.type)).size;
-  const keywords = result?.priorities?.length ? result.priorities : ["공강선호", "졸업우선", "전공필수", "오전수업최소", `${totalCredits}학점`];
 
   if (loading) {
     return (
@@ -252,15 +257,15 @@ export default function ResultPage() {
 
   return (
     <div className="min-h-full bg-[#F4F2FF] px-6 py-6 md:px-10 lg:px-14">
-      <div className="mx-auto grid max-w-[1180px] gap-5 xl:grid-cols-[1fr_470px]">
-        <div className="xl:col-span-2 flex items-center justify-between">
+      <div className="mx-auto flex max-w-[1180px] flex-col gap-5">
+        <div className="flex items-center justify-between">
           <div>
             <button onClick={() => setLocation("/")} className="mb-3 flex items-center gap-2 text-lg font-black text-[#6B5DF6]">
               <ArrowLeft className="h-5 w-5" />
               대시보드
             </button>
             <h1 className="text-4xl font-black text-slate-950">{userName}님을 위한 시간표 추천 완료했습니다!</h1>
-            <p className="mt-2 text-lg font-black text-[#6B5DF6]">AI가 졸업요건과 선호도를 분석하여 추천한 결과입니다.</p>
+            <p className="mt-2 text-lg font-black text-[#6B5DF6]">DB에 저장된 강의 정보를 기준으로 시간표를 표시합니다.</p>
           </div>
           <div className="hidden gap-3 md:flex">
             <button onClick={() => window.open("https://time.navyism.com/?host=www.konkuk.ac.kr", "_blank")} className="rounded-2xl bg-white px-7 py-4 text-lg font-black text-slate-900 shadow-sm">
@@ -273,20 +278,20 @@ export default function ResultPage() {
         </div>
 
         <section className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-          <div className="flex items-center gap-5">
+          <div className="mb-6 flex items-center gap-5">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100 text-[#6B5DF6]">
               <Sparkles className="h-7 w-7" />
             </div>
             <h2 className="text-xl font-black text-slate-900">AI 분석 요약</h2>
           </div>
-          <div className="mt-6 grid grid-cols-4 items-center gap-4">
+          <div className="grid gap-4 md:grid-cols-4">
             {[
               { icon: Box, label: "추천 과목", value: `${selectedCourses.length}개` },
               { icon: GraduationCap, label: "총 학점", value: `${totalCredits}학점` },
               { icon: Users, label: "과목 종류", value: `${courseTypes}개` },
               { icon: CheckCircle, label: "Plan B 포함", value: result.planB ? "포함" : "미포함" },
             ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex items-center gap-3">
+              <div key={label} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 text-[#6B5DF6]">
                   <Icon className="h-7 w-7" />
                 </div>
@@ -299,18 +304,7 @@ export default function ResultPage() {
           </div>
         </section>
 
-        <section className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-          <h2 className="mb-5 border-l-4 border-[#9D91F7] pl-3 text-xl font-black text-slate-900">반영된 키워드</h2>
-          <div className="flex flex-wrap gap-3">
-            {keywords.map((keyword) => (
-              <span key={keyword} className="rounded-full bg-[#F1EEFF] px-4 py-3 text-sm font-black text-[#6B5DF6]">
-                # {keyword}
-              </span>
-            ))}
-          </div>
-        </section>
-
-        <div className="xl:col-span-2 grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {PLAN_TABS.map((tab) => (
             <button
               key={tab.key}
@@ -325,59 +319,43 @@ export default function ResultPage() {
         </div>
 
         {activeTab === "planB" ? (
-          <section className="xl:col-span-2 rounded-3xl bg-white p-8 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
+          <section className="rounded-3xl bg-white p-8 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
             <h2 className="mb-4 text-2xl font-black text-slate-900">Plan B</h2>
-            <p className="text-lg font-bold leading-relaxed text-slate-600">{result.planB || "대체 시간표는 아직 등록되지 않았습니다."}</p>
+            <p className="whitespace-pre-line text-lg font-bold leading-relaxed text-slate-600">{result.planB || "대체 시간표는 아직 등록되지 않았습니다."}</p>
           </section>
         ) : (
           <>
-            <div className="grid gap-5 lg:grid-cols-[260px_1fr]">
-              <aside className="space-y-4">
-                <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-                  <h3 className="mb-5 flex items-center gap-3 text-xl font-black text-slate-900">
-                    <ThumbsUp className="h-6 w-6 text-green-500" />
-                    장점
-                  </h3>
-                  <ul className="space-y-3 text-base font-bold text-slate-500">
-                    {(activePlan?.pros || "전공필수 포함, 졸업요건 충족, 이동거리 최소").split(/[,\n]/).map((item) => (
-                      <li key={item}>• {item.trim()}</li>
-                    ))}
-                  </ul>
-                </section>
-                <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-                  <h3 className="mb-5 flex items-center gap-3 text-xl font-black text-slate-900">
-                    <AlertTriangle className="h-6 w-6 text-orange-500" />
-                    주의사항
-                  </h3>
-                  <ul className="space-y-3 text-base font-bold text-slate-500">
-                    {(activePlan?.cons || "수요일 오전 수업 존재, 금요일 공강 불가").split(/[,\n]/).map((item) => (
-                      <li key={item}>• {item.trim()}</li>
-                    ))}
-                  </ul>
-                </section>
-              </aside>
-              <TimetableGrid courses={selectedCourses} onCourseClick={setSelectedCourse} />
-            </div>
-
-            <div className="space-y-4">
-              <CourseList courses={selectedCourses} onCourseClick={setSelectedCourse} />
-              <section className="relative overflow-hidden rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-                <h3 className="mb-5 border-l-4 border-[#6B5DF6] pl-3 text-xl font-black text-slate-900">AI 추천 이유</h3>
-                <ul className="space-y-2 text-sm font-black text-slate-700">
-                  {["졸업요건을 가장 많이 충족합니다.", "공강을 최대한 확보하였습니다.", "이동시간이 적어 효율적입니다.", "선호 교수님과 시간이 반영되었습니다.", "선호도와 졸업요건을 종합한 최적의 시간표입니다."].map((reason) => (
-                    <li key={reason} className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-[#6B5DF6]" />
-                      {reason}
-                    </li>
+            <div className="grid gap-5 md:grid-cols-2">
+              <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
+                <h3 className="mb-5 flex items-center gap-3 text-xl font-black text-slate-900">
+                  <ThumbsUp className="h-6 w-6 text-green-500" />
+                  장점
+                </h3>
+                <ul className="space-y-3 text-base font-bold text-slate-500">
+                  {(activePlan?.pros || "전공필수 포함, 졸업요건 충족, 이동거리 최소").split(/[,\n]/).map((item) => (
+                    <li key={item}>• {item.trim()}</li>
                   ))}
                 </ul>
-                <img src={`${import.meta.env.BASE_URL}robot.png`} alt="AI 로봇" className="absolute bottom-0 right-8 h-36 w-36 object-contain" />
+              </section>
+              <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
+                <h3 className="mb-5 flex items-center gap-3 text-xl font-black text-slate-900">
+                  <AlertTriangle className="h-6 w-6 text-orange-500" />
+                  주의사항
+                </h3>
+                <ul className="space-y-3 text-base font-bold text-slate-500">
+                  {(activePlan?.cons || "수강신청 전 실제 개설 여부 확인, 정원 변동 가능").split(/[,\n]/).map((item) => (
+                    <li key={item}>• {item.trim()}</li>
+                  ))}
+                </ul>
               </section>
             </div>
+
+            <TimetableGrid courses={selectedCourses} onCourseClick={setSelectedCourse} />
+            <CourseList courses={selectedCourses} onCourseClick={setSelectedCourse} />
           </>
         )}
 
-        <div className="xl:col-span-2 flex justify-center gap-3 pb-4">
+        <div className="flex justify-center gap-3 pb-4">
           <button onClick={() => setLocation("/request")} className="flex min-w-60 items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-lg font-black text-slate-900 shadow-sm">
             <RotateCcw className="h-5 w-5" />
             다시 추천받기
@@ -386,9 +364,7 @@ export default function ResultPage() {
             <Download className="h-5 w-5" />
             PDF 저장
           </button>
-          <button className="flex min-w-60 items-center justify-center rounded-2xl bg-[#5B3FE8] px-8 py-4 text-lg font-black text-white shadow-lg">
-            시간표 적용하기
-          </button>
+          <button className="flex min-w-60 items-center justify-center rounded-2xl bg-[#5B3FE8] px-8 py-4 text-lg font-black text-white shadow-lg">시간표 적용하기</button>
         </div>
       </div>
 

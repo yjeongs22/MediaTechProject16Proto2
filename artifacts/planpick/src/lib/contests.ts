@@ -22,10 +22,11 @@ export interface ContestRequest {
   status: "pending" | "complete";
 }
 
-type RawContest = Record<string, unknown>;
+type Raw = Record<string, unknown>;
 
 const STORAGE_KEY = "planpickContests";
 const REQUEST_STORAGE_KEY = "planpickContestRequests";
+const STORAGE_BUCKET = "planpick-3d8ed.firebasestorage.app";
 
 const DEFAULT_CONTESTS: ContestInfo[] = [
   {
@@ -55,61 +56,51 @@ function writeLocal<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-function firstText(raw: RawContest, keys: string[], fallback = ""): string {
+function textFromValue(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number") return String(value);
+  if (value && typeof value === "object") {
+    const raw = value as Raw;
+    return firstText(raw, ["url", "href", "src", "downloadURL", "downloadUrl", "path", "fullPath", "link"], "");
+  }
+  return "";
+}
+
+function firstText(raw: Raw, keys: string[], fallback = ""): string {
   for (const key of keys) {
-    const value = raw[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-    if (typeof value === "number") return String(value);
-    if (value && typeof value === "object") {
-      const nested = value as RawContest;
-      const nestedValue: string = firstText(nested, ["url", "href", "src", "downloadURL", "path"], "");
-      if (nestedValue) return nestedValue;
-    }
+    const value = textFromValue(raw[key]);
+    if (value) return value;
   }
   return fallback;
 }
 
-function normalizeMediaUrl(value: string) {
-  if (!value) return "";
-  if (value.startsWith("gs://")) {
-    const withoutScheme = value.slice(5);
+function encodeStoragePath(path: string) {
+  return path
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("%2F");
+}
+
+function normalizeUrl(value: string) {
+  const url = value.trim();
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url) || url.startsWith("data:image/")) return url;
+  if (url.startsWith("gs://")) {
+    const withoutScheme = url.slice(5);
     const slashIndex = withoutScheme.indexOf("/");
-    if (slashIndex < 0) return value;
+    if (slashIndex < 0) return url;
     const bucket = withoutScheme.slice(0, slashIndex);
     const path = withoutScheme.slice(slashIndex + 1);
-    return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(path)}?alt=media`;
+    return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeStoragePath(path)}?alt=media`;
   }
-  return value;
+  if (/\.(png|jpe?g|webp|gif)$/i.test(url) || url.includes("/")) {
+    return `https://firebasestorage.googleapis.com/v0/b/${STORAGE_BUCKET}/o/${encodeStoragePath(url)}?alt=media`;
+  }
+  return url;
 }
 
-function normalizeLinks(raw: RawContest): ContestLink[] {
-  const rawLinks = raw.links || raw.link || raw.urls || raw.linkList || raw.homepages;
-  if (Array.isArray(rawLinks)) {
-    const links = rawLinks
-      .map((item, index) => {
-        if (typeof item === "string") return { label: `링크 ${index + 1}`, href: item };
-        if (item && typeof item === "object") {
-          const link = item as RawContest;
-          return {
-            label: firstText(link, ["label", "name", "title"], `링크 ${index + 1}`),
-            href: firstText(link, ["href", "url", "link"], ""),
-          };
-        }
-        return null;
-      })
-      .filter(Boolean) as ContestLink[];
-    if (links.length > 0) return links.slice(0, 3);
-  }
-
-  return [
-    { label: firstText(raw, ["link1Label", "url1Label"], "링크 1"), href: firstText(raw, ["link1", "url1", "homepage", "siteUrl", "site", "website"], "") },
-    { label: firstText(raw, ["link2Label", "url2Label"], "링크 2"), href: firstText(raw, ["link2", "url2", "applyUrl", "applicationUrl", "applicationLink"], "") },
-    { label: firstText(raw, ["link3Label", "url3Label"], "링크 3"), href: firstText(raw, ["link3", "url3", "detailUrl", "detailLink", "noticeUrl"], "") },
-  ];
-}
-
-function normalizeContest(raw: RawContest, fallbackId: string): ContestInfo {
-  const poster = firstText(raw, [
+function firstMedia(raw: Raw) {
+  const direct = firstText(raw, [
     "poster",
     "posterUrl",
     "posterURL",
@@ -124,25 +115,78 @@ function normalizeContest(raw: RawContest, fallbackId: string): ContestInfo {
     "photoUrl",
     "fileUrl",
     "downloadURL",
+    "downloadUrl",
     "storageUrl",
+    "storagePath",
+    "posterPath",
+    "imagePath",
     "포스터",
-  ], "");
+  ]);
+  if (direct) return normalizeUrl(direct);
 
+  for (const key of ["images", "imageUrls", "posters", "posterUrls", "files", "attachments"]) {
+    const value = raw[key];
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const text = textFromValue(item);
+        if (text) return normalizeUrl(text);
+      }
+    }
+  }
+  return "";
+}
+
+function normalizeLinks(raw: Raw): ContestLink[] {
+  const output: ContestLink[] = [];
+  const value = raw.links || raw.link || raw.urls || raw.linkList || raw.homepages || raw.buttons;
+
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => {
+      if (typeof item === "string") output.push({ label: `링크 ${index + 1}`, href: normalizeUrl(item) });
+      if (item && typeof item === "object") {
+        const link = item as Raw;
+        output.push({
+          label: firstText(link, ["label", "name", "title", "text"], `링크 ${index + 1}`),
+          href: normalizeUrl(firstText(link, ["href", "url", "link", "src"], "")),
+        });
+      }
+    });
+  } else if (value && typeof value === "object") {
+    const linkMap = value as Raw;
+    Object.entries(linkMap).forEach(([label, href], index) => {
+      const link = textFromValue(href);
+      if (link) output.push({ label: label || `링크 ${index + 1}`, href: normalizeUrl(link) });
+    });
+  }
+
+  const directLinks = [
+    { label: firstText(raw, ["link1Label", "url1Label"], "링크 1"), href: firstText(raw, ["link1", "url1", "homepage", "siteUrl", "site", "website"], "") },
+    { label: firstText(raw, ["link2Label", "url2Label"], "링크 2"), href: firstText(raw, ["link2", "url2", "applyUrl", "applicationUrl", "applicationLink"], "") },
+    { label: firstText(raw, ["link3Label", "url3Label"], "링크 3"), href: firstText(raw, ["link3", "url3", "detailUrl", "detailLink", "noticeUrl"], "") },
+  ];
+  directLinks.forEach((link) => {
+    if (link.href) output.push({ ...link, href: normalizeUrl(link.href) });
+  });
+
+  return output.filter((link) => link.href).slice(0, 3);
+}
+
+function normalizeContest(raw: Raw, fallbackId: string): ContestInfo {
   return {
     id: firstText(raw, ["id", "contestId"], fallbackId),
     name: firstText(raw, ["name", "title", "contestName", "competitionName", "공모전이름"], "이름 없는 공모전"),
-    date: firstText(raw, ["date", "period", "applicationDate", "applicationPeriod", "deadline", "dueDate", "신청날짜"], "일정 미정"),
-    reason: firstText(raw, ["reason", "aiReason", "recommendReason", "recommendationReason", "description", "추천이유"], "AI 추천 이유가 아직 등록되지 않았어요."),
-    poster: normalizeMediaUrl(poster),
+    date: firstText(raw, ["date", "period", "applicationDate", "applicationPeriod", "deadline", "dueDate", "startDate", "endDate", "신청날짜"], "일정 미정"),
+    reason: firstText(raw, ["reason", "aiReason", "recommendReason", "recommendationReason", "description", "summary", "추천이유"], "AI 추천 이유가 아직 등록되지 않았어요."),
+    poster: firstMedia(raw),
     links: normalizeLinks(raw),
   };
 }
 
-function extractContestDocs(data: RawContest, fallbackId: string) {
-  const arrays = [data.items, data.contests, data.list, data.data];
-  for (const value of arrays) {
+function extractContestDocs(data: Raw, fallbackId: string) {
+  for (const key of ["items", "contests", "list", "data", "results"]) {
+    const value = data[key];
     if (Array.isArray(value)) {
-      return value.map((item, index) => normalizeContest((item || {}) as RawContest, `${fallbackId}-${index}`));
+      return value.map((item, index) => normalizeContest((item || {}) as Raw, `${fallbackId}-${index}`));
     }
   }
   return [normalizeContest(data, fallbackId)];
@@ -166,7 +210,7 @@ export async function getContests(): Promise<ContestInfo[]> {
     await ensureFirebaseAuth();
     const snap = await getDoc(doc(db, "planpickMvp", "contests"));
     if (snap.exists()) {
-      const items = extractContestDocs(snap.data() as RawContest, "legacy-contest");
+      const items = extractContestDocs(snap.data() as Raw, "legacy-contest");
       if (items.length > 0) {
         writeLocal(STORAGE_KEY, items);
         return items;
