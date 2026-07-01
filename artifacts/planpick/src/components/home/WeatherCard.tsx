@@ -99,45 +99,45 @@ export function WeatherCard() {
   }, []);
 
   return (
-    <section className="flex h-48 flex-col overflow-hidden rounded-[32px] border border-gray-100 bg-white p-5 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h3 className="font-bold text-[#1F1543]">지역별 날씨</h3>
-          <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-gray-400">
-            <MapPin className="h-3 w-3" />
+    <section className="flex h-48 flex-col overflow-hidden rounded-[32px] border border-gray-100 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="whitespace-nowrap text-sm font-bold text-[#1F1543]">지역별 날씨</h3>
+          <p className="mt-1 flex items-center gap-1 truncate text-[11px] font-semibold text-gray-400">
+            <MapPin className="h-3 w-3 shrink-0" />
             {weather.city}
           </p>
         </div>
         <button
           type="button"
           onClick={requestLocation}
-          className="rounded-full p-2 text-gray-400 transition-colors hover:bg-[#F2EFFF] hover:text-[#5B4CF2]"
+          className="shrink-0 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-[#F2EFFF] hover:text-[#5B4CF2]"
           aria-label="날씨 새로고침"
         >
           {weather.loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 items-center justify-between gap-3 rounded-2xl bg-gradient-to-br from-[#F2EFFF] to-white p-4">
-        <div className="flex items-start justify-between">
-          <CloudSun className="h-8 w-8 text-[#5B4CF2]" />
+      <div className="flex min-h-0 flex-1 flex-col justify-between rounded-2xl bg-gradient-to-br from-[#F2EFFF] to-white p-3">
+        <div className="flex items-start justify-between gap-2">
+          <CloudSun className="h-8 w-8 shrink-0 text-[#5B4CF2]" />
+          <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-[#5B4CF2] shadow-sm">{summary}</span>
         </div>
 
         {weather.error ? (
-          <p className="text-sm font-bold text-gray-500">{weather.error}</p>
+          <p className="text-xs font-bold leading-relaxed text-gray-500">{weather.error}</p>
         ) : (
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <div className="whitespace-nowrap text-3xl font-black text-[#1F1543]">
               {weather.temperature === null ? "--" : weather.temperature}
-              <span className="text-lg">°C</span>
+              <span className="text-base">°C</span>
             </div>
-            <div className="mt-2 grid grid-cols-2 gap-2 whitespace-nowrap text-[11px] font-bold text-gray-500">
+            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 whitespace-nowrap text-[10px] font-bold text-gray-500">
               <span>습도 {weather.humidity ?? "--"}%</span>
               <span>바람 {weather.wind ?? "--"}km/h</span>
             </div>
           </div>
         )}
-        <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#5B4CF2] shadow-sm">{summary}</span>
       </div>
     </section>
   );
