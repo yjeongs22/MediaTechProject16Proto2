@@ -8,7 +8,7 @@ import { FeatureIcons } from "@/components/home/FeatureIcons";
 
 export default function Home() {
   return (
-    <div className="min-h-screen overflow-hidden bg-[#F3F4F8] p-6 font-sans md:p-8 lg:p-10">
+    <div className="min-h-screen overflow-hidden bg-[#f4f2fc] p-6 font-sans md:p-8 lg:p-10">
       <div className="pointer-events-none fixed right-0 top-0 -z-10 h-[600px] w-[800px] translate-x-1/4 -translate-y-1/4 rounded-full bg-[#F2EFFF] opacity-60 blur-[100px]" />
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-10">
         <div className="flex flex-col items-stretch gap-8 xl:flex-row">
