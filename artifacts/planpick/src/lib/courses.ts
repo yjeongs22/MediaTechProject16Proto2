@@ -1,5 +1,12 @@
 import { getDataAsync } from "./storage";
 
+export interface CourseSchedule {
+  day: string;
+  start: string;
+  end: string;
+  room?: string;
+}
+
 export interface Course {
   id: string;
   name: string;
@@ -13,7 +20,11 @@ export interface Course {
   courseCode: string;
   room: string;
   review: string;
+  reviewItems: string[];
+  reviewSummary: string;
   syllabus: string;
+  syllabusImageDataUrl: string;
+  schedule: CourseSchedule[];
   color: string;
 }
 
@@ -31,108 +42,46 @@ export const defaultCourses: Course[] = [
     courseCode: "CS201",
     room: "공학관 302호",
     review: "과제는 많지만 전공 기초를 잡기 좋다는 평가가 많습니다.",
+    reviewItems: [
+      "과제는 많지만 전공 기초를 잡기 좋다는 평가가 많습니다.",
+      "수업 흐름과 과제량을 미리 확인하고 들어가면 따라가기 좋습니다.",
+      "출석, 과제, 시험 준비를 꾸준히 챙기는 학생에게 추천합니다.",
+    ],
+    reviewSummary: "난이도는 있지만 전공 이해도 향상에 도움이 되는 과목입니다.",
     syllabus: "스택, 큐, 리스트, 트리, 그래프 등 기본 자료구조와 알고리즘 기초를 학습합니다.",
+    syllabusImageDataUrl: "",
+    schedule: [{ day: "월", start: "10:00", end: "12:00", room: "공학관 302호" }],
     color: "#C4B5FD",
-  },
-  {
-    id: "computer-arch",
-    name: "컴퓨터구조",
-    type: "전공필수",
-    day: "월",
-    start: "14:00",
-    end: "16:00",
-    credit: 3,
-    difficulty: "높음",
-    team: "없음",
-    courseCode: "CS204",
-    room: "공학관 405호",
-    review: "개념 이해가 중요하고 시험 범위가 넓다는 평가가 있습니다.",
-    syllabus: "CPU 구조, 명령어 집합, 메모리 계층, 파이프라이닝 등 컴퓨터 시스템 구조를 다룹니다.",
-    color: "#C4B5FD",
-  },
-  {
-    id: "web-programming",
-    name: "웹프로그래밍",
-    type: "전공선택",
-    day: "수",
-    start: "13:00",
-    end: "15:00",
-    credit: 3,
-    difficulty: "중간",
-    team: "있음",
-    courseCode: "CS305",
-    room: "실습실 210호",
-    review: "실습 중심이라 결과물이 남고 프로젝트 경험에 유익합니다.",
-    syllabus: "HTML, CSS, JavaScript와 웹 서비스 구현 기초를 배우고 간단한 팀 프로젝트를 제작합니다.",
-    color: "#DDD6FE",
   },
   {
     id: "database",
     name: "데이터베이스",
-    type: "전공선택",
-    day: "화",
-    start: "10:00",
-    end: "12:00",
-    credit: 3,
-    difficulty: "중간",
-    team: "있음",
-    courseCode: "CS303",
-    room: "공학관 302호",
-    review: "SQL 실습이 많고 프로젝트는 취업 준비에 유용합니다.",
-    syllabus: "관계형 데이터베이스, SQL, 정규화, 트랜잭션, 데이터 모델링을 학습합니다.",
-    color: "#C9F4B5",
-  },
-  {
-    id: "english",
-    name: "교양영어",
-    type: "교양필수",
-    day: "화",
-    start: "16:00",
-    end: "17:00",
-    credit: 2,
-    difficulty: "낮음",
-    team: "없음",
-    courseCode: "GE101",
-    room: "교양관 103호",
-    review: "부담은 적지만 출석과 발표 준비가 중요합니다.",
-    syllabus: "기초 영어 읽기, 말하기, 발표를 중심으로 대학 교양 영어 역량을 기릅니다.",
-    color: "#FADDDD",
-  },
-  {
-    id: "creative",
-    name: "창의적사고",
-    type: "교양선택",
+    type: "전공필수",
     day: "금",
-    start: "13:00",
-    end: "15:00",
-    credit: 2,
-    difficulty: "낮음",
-    team: "있음",
-    courseCode: "GE220",
-    room: "교양관 205호",
-    review: "팀 발표가 있지만 학점 부담은 낮은 편입니다.",
-    syllabus: "문제 해결, 아이디어 발상, 팀 기반 발표 활동을 통해 창의적 사고 과정을 익힙니다.",
-    color: "#FDE68A",
-  },
-  {
-    id: "ai-basic",
-    name: "AI기초",
-    type: "전공선택",
-    day: "수",
     start: "09:00",
-    end: "11:00",
+    end: "11:50",
     credit: 3,
     difficulty: "중간",
     team: "없음",
-    courseCode: "CS250",
-    room: "AI통합관 301호",
-    review: "최근 관심도가 높은 과목이며 수학 기초가 있으면 따라가기 좋습니다.",
-    syllabus: "인공지능 개념, 머신러닝 기초, 데이터 학습 과정, 간단한 모델 사용 예시를 다룹니다.",
-    color: "#DDD6FE",
+    courseCode: "NIB12394-22",
+    room: "J303호",
+    review: "SQL 실습과 이론을 함께 다루는 실용적인 과목입니다.",
+    reviewItems: [
+      "SQL 실습과 이론을 함께 다루는 실용적인 과목입니다.",
+      "수업만 잘 따라가면 과제와 시험은 무난하다는 평가가 있습니다.",
+      "꾸준히 공부하지 않으면 좋은 성적을 받기 어려울 수 있습니다.",
+    ],
+    reviewSummary: "이론과 실습을 균형 있게 진행하며 꾸준한 복습이 중요한 과목입니다.",
+    syllabus: "관계형 데이터베이스, SQL, 정규화, 트랜잭션, 데이터 모델링을 학습합니다.",
+    syllabusImageDataUrl: "",
+    schedule: [{ day: "금", start: "09:00", end: "11:50", room: "J303호" }],
+    color: "#C9F4B5",
   },
 ];
 
-function value(raw: Partial<Course> & Record<string, unknown>, keys: string[], fallback = "") {
+type RawCourse = Partial<Course> & Record<string, unknown>;
+
+function textValue(raw: RawCourse, keys: string[], fallback = "") {
   for (const key of keys) {
     const item = raw[key];
     if (typeof item === "string" && item.trim()) return item.trim();
@@ -141,25 +90,72 @@ function value(raw: Partial<Course> & Record<string, unknown>, keys: string[], f
   return fallback;
 }
 
-function normalizeCourse(raw: Partial<Course> & Record<string, unknown>, index: number): Course {
+function textArray(raw: RawCourse, keys: string[], fallback: string[]) {
+  for (const key of keys) {
+    const item = raw[key];
+    if (Array.isArray(item)) {
+      const values = item
+        .map((value) => (typeof value === "string" ? value.trim() : ""))
+        .filter(Boolean);
+      if (values.length > 0) return values;
+    }
+  }
+  return fallback;
+}
+
+function normalizeSchedule(raw: RawCourse, fallback: Course): CourseSchedule[] {
+  const value = raw.schedule;
+  if (Array.isArray(value)) {
+    const schedules = value
+      .map((item) => {
+        if (!item || typeof item !== "object") return null;
+        const schedule = item as unknown as Record<string, unknown>;
+        const day = String(schedule.day || schedule.weekday || schedule["요일"] || "").trim();
+        const start = String(schedule.start || schedule.startTime || schedule["시작시간"] || "").trim();
+        const end = String(schedule.end || schedule.endTime || schedule["종료시간"] || "").trim();
+        const room = String(schedule.room || schedule.classroom || schedule.location || schedule["강의실"] || raw.room || "").trim();
+        if (!day || !start || !end) return null;
+        return { day: day.slice(0, 1), start, end, room };
+      })
+      .filter(Boolean) as CourseSchedule[];
+    if (schedules.length > 0) return schedules;
+  }
+
+  const day = textValue(raw, ["day", "weekday", "요일"], fallback.day).slice(0, 1);
+  const start = textValue(raw, ["start", "startTime", "시작시간"], fallback.start);
+  const end = textValue(raw, ["end", "endTime", "종료시간"], fallback.end);
+  const room = textValue(raw, ["room", "classroom", "location", "강의실"], fallback.room);
+  return [{ day, start, end, room }];
+}
+
+function normalizeCourse(raw: RawCourse, index: number): Course {
   const fallback = defaultCourses[index % defaultCourses.length];
+  const review = textValue(raw, ["review", "reviews", "lectureReview", "강의평"], fallback.review);
+  const reviewItems = textArray(raw, ["reviewItems", "reviewList", "reviewsList"], fallback.reviewItems || [review]).slice(0, 3);
+  const schedule = normalizeSchedule(raw, fallback);
+  const firstSchedule = schedule[0] || fallback.schedule[0];
+
   return {
     ...fallback,
     ...raw,
-    id: value(raw, ["id", "courseId", "courseCode", "code"], fallback.id || `course-${index}`),
-    name: value(raw, ["name", "title", "courseName", "subjectName", "과목명"], fallback.name),
-    type: value(raw, ["type", "category", "courseType", "이수구분"], fallback.type),
-    day: value(raw, ["day", "weekday", "요일"], fallback.day).slice(0, 1),
-    start: value(raw, ["start", "startTime", "시작시간"], fallback.start),
-    end: value(raw, ["end", "endTime", "종료시간"], fallback.end),
+    id: textValue(raw, ["id", "courseId", "courseCode", "code"], fallback.id || `course-${index}`),
+    name: textValue(raw, ["name", "title", "courseName", "subjectName", "과목명"], fallback.name),
+    type: textValue(raw, ["type", "category", "courseType", "이수구분"], fallback.type),
+    day: firstSchedule.day,
+    start: firstSchedule.start,
+    end: firstSchedule.end,
     credit: Number(raw.credit || raw["학점"] || fallback.credit || 0),
-    difficulty: value(raw, ["difficulty", "난이도"], fallback.difficulty),
-    team: value(raw, ["team", "teamProject", "팀플"], fallback.team),
-    courseCode: value(raw, ["courseCode", "code", "subjectCode", "과목코드"], fallback.courseCode),
-    room: value(raw, ["room", "classroom", "location", "강의실"], fallback.room),
-    review: value(raw, ["review", "reviews", "lectureReview", "강의평"], fallback.review),
-    syllabus: value(raw, ["syllabus", "plan", "lecturePlan", "강의계획서"], fallback.syllabus),
-    color: value(raw, ["color"], fallback.color || "#C4B5FD"),
+    difficulty: textValue(raw, ["difficulty", "난이도"], fallback.difficulty),
+    team: textValue(raw, ["team", "teamProject", "팀플"], fallback.team),
+    courseCode: textValue(raw, ["courseCode", "code", "subjectCode", "과목코드"], fallback.courseCode),
+    room: firstSchedule.room || textValue(raw, ["room", "classroom", "location", "강의실"], fallback.room),
+    review,
+    reviewItems,
+    reviewSummary: textValue(raw, ["reviewSummary", "summary", "oneLineSummary", "한줄요약"], fallback.reviewSummary),
+    syllabus: textValue(raw, ["syllabus", "plan", "lecturePlan", "강의계획서"], fallback.syllabus),
+    syllabusImageDataUrl: textValue(raw, ["syllabusImageDataUrl", "syllabusImage", "syllabusImageUrl", "planImageDataUrl"], fallback.syllabusImageDataUrl),
+    schedule,
+    color: textValue(raw, ["color"], fallback.color || "#C4B5FD"),
   };
 }
 
@@ -177,7 +173,7 @@ export function getCourses(): Course[] {
 }
 
 export async function getCoursesAsync(): Promise<Course[]> {
-  const dbCourses = await getDataAsync<(Partial<Course> & Record<string, unknown>)[]>("planpickCourses");
+  const dbCourses = await getDataAsync<RawCourse[]>("planpickCourses");
   if (Array.isArray(dbCourses) && dbCourses.length > 0) {
     const normalized = dbCourses.map(normalizeCourse);
     localStorage.setItem("planpickCourses", JSON.stringify(normalized));

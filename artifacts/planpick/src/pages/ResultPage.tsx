@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { AlertTriangle, ArrowLeft, Box, CheckCircle, Download, RotateCcw, Star, ThumbsUp, Users, X } from "lucide-react";
 import { getCurrentUserName } from "@/lib/auth";
-import { getCoursesAsync, type Course } from "@/lib/courses";
+import { getCoursesAsync, type Course, type CourseSchedule } from "@/lib/courses";
 import { getCurrentRequestId, getRequestById, type PlanData, type PlanpickRequest } from "@/lib/storage";
 
 const DAYS = ["월", "화", "수", "목", "금"];
@@ -30,18 +30,33 @@ function timeToRow(time: string) {
 }
 
 function getReviews(course: Course) {
-  const base = course.review || "등록된 강의평이 없습니다.";
-  return [
-    base,
-    "수업 흐름과 과제량을 미리 확인하고 들어가면 따라가기 좋습니다.",
-    "출석, 과제, 시험 준비를 꾸준히 챙기는 학생에게 추천합니다.",
-  ];
+  if (Array.isArray(course.reviewItems) && course.reviewItems.length > 0) return course.reviewItems.slice(0, 3);
+  if (course.review) {
+    return course.review
+      .split(/\n+/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 3);
+  }
+  return ["등록된 강의평이 없습니다."];
 }
 
 function getSummary(course: Course) {
-  if (course.difficulty === "높음") return "한 줄 요약: 난이도는 있지만 전공 이해도 향상에 도움이 되는 과목입니다.";
-  if (course.team === "있음") return "한 줄 요약: 팀 활동이 있어 일정 관리가 중요한 과목입니다.";
-  return "한 줄 요약: 시간표 균형을 크게 해치지 않으면서 채우기 좋은 과목입니다.";
+  if (course.reviewSummary) return course.reviewSummary;
+  if (course.difficulty === "높음") return "난이도는 있지만 전공 이해도 향상에 도움이 되는 과목입니다.";
+  if (course.team === "있음") return "팀 활동이 있어 일정 관리가 중요한 과목입니다.";
+  return "시간표 균형을 크게 해치지 않으면서 채우기 좋은 과목입니다.";
+}
+
+function getSchedules(course: Course): CourseSchedule[] {
+  if (Array.isArray(course.schedule) && course.schedule.length > 0) return course.schedule;
+  return [{ day: course.day, start: course.start, end: course.end, room: course.room }];
+}
+
+function formatSchedules(course: Course) {
+  return getSchedules(course)
+    .map((schedule) => `${cleanDay(schedule.day)} ${schedule.start}~${schedule.end}${schedule.room ? ` ${schedule.room}` : ""}`)
+    .join(" / ");
 }
 
 function matchCourse(courses: Course[], id: string) {
@@ -63,6 +78,7 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
   const [showSyllabus, setShowSyllabus] = useState(false);
   const reviews = getReviews(course);
   const syllabus = course.syllabus?.trim();
+  const syllabusImage = course.syllabusImageDataUrl?.trim();
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4">
@@ -72,7 +88,7 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
             <span className="mb-2 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-600">{course.type}</span>
             <h2 className="text-2xl font-black text-slate-950">{course.name}</h2>
             <p className="mt-1 text-sm font-bold text-slate-400">
-              {cleanDay(course.day)} {course.start}~{course.end} | {course.room || "강의실 미입력"} | {course.credit}학점
+              {formatSchedules(course)} | {course.credit}학점
             </p>
           </div>
           <button onClick={onClose} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700" aria-label="닫기">
@@ -91,7 +107,7 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
           </div>
         </section>
 
-        <p className="mb-5 rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-black text-indigo-600">{getSummary(course)}</p>
+        <p className="mb-5 rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-black leading-relaxed text-indigo-600">한 줄 요약: {getSummary(course)}</p>
 
         <button onClick={() => setShowSyllabus(true)} className="w-full rounded-2xl bg-[#5B3FE8] px-5 py-3 text-sm font-black text-white">
           강의 계획서 보기
@@ -100,16 +116,22 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
 
       {showSyllabus && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+          <div className="max-h-[88vh] w-full max-w-3xl overflow-hidden rounded-3xl bg-white p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-black text-slate-950">강의 계획서</h3>
               <button onClick={() => setShowSyllabus(false)} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700" aria-label="강의 계획서 닫기">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="min-h-36 whitespace-pre-line rounded-2xl bg-slate-50 p-5 text-sm font-bold leading-relaxed text-slate-600">
-              {syllabus || "아직 등록되지 않았습니다."}
-            </p>
+            <div className="max-h-[70vh] overflow-auto rounded-2xl bg-slate-50 p-5">
+              {syllabusImage ? (
+                <img src={syllabusImage} alt={`${course.name} 강의 계획서`} className="mx-auto max-h-[68vh] w-auto max-w-full rounded-xl object-contain" />
+              ) : (
+                <p className="min-h-36 whitespace-pre-line text-sm font-bold leading-relaxed text-slate-600">
+                  {syllabus || "아직 등록되지 않았습니다."}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -146,28 +168,30 @@ function TimetableGrid({ courses, onCourseClick }: { courses: Course[]; onCourse
                 ))}
               </div>
             ))}
-            {courses.map((course, index) => {
-              const dayIndex = DAYS.indexOf(cleanDay(course.day));
-              if (dayIndex < 0) return null;
-              const top = timeToRow(course.start) * 56;
-              const height = Math.max(42, (timeToRow(course.end) - timeToRow(course.start)) * 56 - 4);
-              return (
-                <button
-                  key={`${course.id}-${index}`}
-                  onClick={() => onCourseClick(course)}
-                  className="absolute overflow-hidden rounded-xl border border-black/5 p-2 text-left text-xs font-black text-slate-700 shadow-sm transition-transform hover:-translate-y-0.5"
-                  style={{
-                    left: `calc(${dayIndex * 20}% + 8px)`,
-                    width: "calc(20% - 16px)",
-                    top,
-                    height,
-                    backgroundColor: course.color || "#DDD6FE",
-                  }}
-                >
-                  {course.name}
-                </button>
-              );
-            })}
+            {courses.flatMap((course, courseIndex) =>
+              getSchedules(course).map((schedule, scheduleIndex) => {
+                const dayIndex = DAYS.indexOf(cleanDay(schedule.day));
+                if (dayIndex < 0) return null;
+                const top = timeToRow(schedule.start) * 56;
+                const height = Math.max(42, (timeToRow(schedule.end) - timeToRow(schedule.start)) * 56 - 4);
+                return (
+                  <button
+                    key={`${course.id}-${courseIndex}-${scheduleIndex}`}
+                    onClick={() => onCourseClick(course)}
+                    className="absolute overflow-hidden rounded-xl border border-black/5 p-2 text-left text-xs font-black text-slate-700 shadow-sm transition-transform hover:-translate-y-0.5"
+                    style={{
+                      left: `calc(${dayIndex * 20}% + 8px)`,
+                      width: "calc(20% - 16px)",
+                      top,
+                      height,
+                      backgroundColor: course.color || "#DDD6FE",
+                    }}
+                  >
+                    {course.name}
+                  </button>
+                );
+              }),
+            )}
           </div>
         </div>
       </div>
@@ -191,9 +215,7 @@ function CourseList({ courses, onCourseClick }: { courses: Course[]; onCourseCli
                 <h4 className="text-sm font-black text-slate-900">{course.name}</h4>
                 <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-black text-indigo-500">{course.type}</span>
               </div>
-              <p className="mt-1 text-xs font-bold text-slate-400">
-                {course.start}~{course.end} | {cleanDay(course.day)} | {course.room || "강의실 미입력"}
-              </p>
+              <p className="mt-1 text-xs font-bold text-slate-400">{formatSchedules(course)}</p>
             </div>
             <button onClick={() => onCourseClick(course)} className="rounded-full border border-slate-200 px-4 py-2 text-xs font-black text-slate-700">
               강의정보
@@ -261,12 +283,18 @@ export default function ResultPage() {
             <button onClick={() => setLocation("/")} className="mb-2 inline-flex items-center gap-1 text-sm font-black text-[#6B5DF6]">
               <ArrowLeft className="h-4 w-4" /> 대시보드
             </button>
-            <h1 className="text-[34px] font-black text-slate-950 md:text-[42px]" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>{userName}님을 위한 시간표 추천 완료했습니다!</h1>
+            <h1 className="text-[34px] font-black text-slate-950 md:text-[42px]" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>
+              {userName}님을 위한 시간표 추천 완료했습니다!
+            </h1>
             <p className="mt-1 text-base font-black text-[#6B5DF6]">AI가 졸업요건과 선호도를 분석하여 추천한 결과입니다.</p>
           </div>
           <div className="flex gap-3">
-            <a href="https://time.navyism.com/?host=www.konkuk.ac.kr" className="rounded-xl bg-white px-6 py-3 text-sm font-black text-slate-800 shadow-sm ring-1 ring-slate-100">서비스시간</a>
-            <a href="https://sugang.konkuk.ac.kr/" className="rounded-xl bg-[#5B3FE8] px-6 py-3 text-sm font-black text-white shadow-sm">수강신청</a>
+            <a href="https://time.navyism.com/?host=www.konkuk.ac.kr" className="rounded-xl bg-white px-6 py-3 text-sm font-black text-slate-800 shadow-sm ring-1 ring-slate-100">
+              서비스시간
+            </a>
+            <a href="https://sugang.konkuk.ac.kr/" className="rounded-xl bg-[#5B3FE8] px-6 py-3 text-sm font-black text-white shadow-sm">
+              수강신청
+            </a>
           </div>
         </header>
 
