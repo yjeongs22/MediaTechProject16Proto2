@@ -1,5 +1,5 @@
-import { db, ensureFirebaseAuth } from "./firebase";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { db, ensureFirebaseAuth } from "./firebase";
 
 export interface ContestLink {
   label: string;
@@ -77,6 +77,7 @@ function firstText(raw: Raw, keys: string[], fallback = ""): string {
 function encodeStoragePath(path: string) {
   return path
     .split("/")
+    .filter(Boolean)
     .map((part) => encodeURIComponent(part))
     .join("%2F");
 }
@@ -84,7 +85,8 @@ function encodeStoragePath(path: string) {
 function normalizeUrl(value: string) {
   const url = value.trim();
   if (!url) return "";
-  if (/^https?:\/\//i.test(url) || url.startsWith("data:image/")) return url;
+  if (/^https?:\/\//i.test(url) || url.startsWith("data:image/") || url.startsWith("blob:")) return url;
+
   if (url.startsWith("gs://")) {
     const withoutScheme = url.slice(5);
     const slashIndex = withoutScheme.indexOf("/");
@@ -93,9 +95,11 @@ function normalizeUrl(value: string) {
     const path = withoutScheme.slice(slashIndex + 1);
     return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeStoragePath(path)}?alt=media`;
   }
-  if (/\.(png|jpe?g|webp|gif)$/i.test(url) || url.includes("/")) {
+
+  if (/\.(png|jpe?g|webp|gif|avif)$/i.test(url) || url.includes("/")) {
     return `https://firebasestorage.googleapis.com/v0/b/${STORAGE_BUCKET}/o/${encodeStoragePath(url)}?alt=media`;
   }
+
   return url;
 }
 
@@ -106,9 +110,12 @@ function firstMedia(raw: Raw) {
     "posterURL",
     "posterImage",
     "posterImageUrl",
+    "posterImageURL",
+    "posterSrc",
     "image",
     "imageUrl",
     "imageURL",
+    "imageSrc",
     "thumbnail",
     "thumbnailUrl",
     "thumbnailURL",
@@ -121,18 +128,19 @@ function firstMedia(raw: Raw) {
     "posterPath",
     "imagePath",
     "포스터",
+    "이미지",
   ]);
   if (direct) return normalizeUrl(direct);
 
-  for (const key of ["images", "imageUrls", "posters", "posterUrls", "files", "attachments"]) {
+  for (const key of ["images", "imageUrls", "imageURLS", "posters", "posterUrls", "files", "attachments"]) {
     const value = raw[key];
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        const text = textFromValue(item);
-        if (text) return normalizeUrl(text);
-      }
+    if (!Array.isArray(value)) continue;
+    for (const item of value) {
+      const text = textFromValue(item);
+      if (text) return normalizeUrl(text);
     }
   }
+
   return "";
 }
 
@@ -142,7 +150,11 @@ function normalizeLinks(raw: Raw): ContestLink[] {
 
   if (Array.isArray(value)) {
     value.forEach((item, index) => {
-      if (typeof item === "string") output.push({ label: `링크 ${index + 1}`, href: normalizeUrl(item) });
+      if (typeof item === "string") {
+        output.push({ label: `링크 ${index + 1}`, href: normalizeUrl(item) });
+        return;
+      }
+
       if (item && typeof item === "object") {
         const link = item as Raw;
         output.push({
@@ -152,18 +164,27 @@ function normalizeLinks(raw: Raw): ContestLink[] {
       }
     });
   } else if (value && typeof value === "object") {
-    const linkMap = value as Raw;
-    Object.entries(linkMap).forEach(([label, href], index) => {
+    Object.entries(value as Raw).forEach(([label, href], index) => {
       const link = textFromValue(href);
       if (link) output.push({ label: label || `링크 ${index + 1}`, href: normalizeUrl(link) });
     });
   }
 
   const directLinks = [
-    { label: firstText(raw, ["link1Label", "url1Label"], "링크 1"), href: firstText(raw, ["link1", "url1", "homepage", "siteUrl", "site", "website"], "") },
-    { label: firstText(raw, ["link2Label", "url2Label"], "링크 2"), href: firstText(raw, ["link2", "url2", "applyUrl", "applicationUrl", "applicationLink"], "") },
-    { label: firstText(raw, ["link3Label", "url3Label"], "링크 3"), href: firstText(raw, ["link3", "url3", "detailUrl", "detailLink", "noticeUrl"], "") },
+    {
+      label: firstText(raw, ["link1Label", "url1Label"], "링크 1"),
+      href: firstText(raw, ["link1", "url1", "homepage", "siteUrl", "site", "website", "링크1"], ""),
+    },
+    {
+      label: firstText(raw, ["link2Label", "url2Label"], "링크 2"),
+      href: firstText(raw, ["link2", "url2", "applyUrl", "applicationUrl", "applicationLink", "링크2"], ""),
+    },
+    {
+      label: firstText(raw, ["link3Label", "url3Label"], "링크 3"),
+      href: firstText(raw, ["link3", "url3", "detailUrl", "detailLink", "noticeUrl", "링크3"], ""),
+    },
   ];
+
   directLinks.forEach((link) => {
     if (link.href) output.push({ ...link, href: normalizeUrl(link.href) });
   });
@@ -174,8 +195,8 @@ function normalizeLinks(raw: Raw): ContestLink[] {
 function normalizeContest(raw: Raw, fallbackId: string): ContestInfo {
   return {
     id: firstText(raw, ["id", "contestId"], fallbackId),
-    name: firstText(raw, ["name", "title", "contestName", "competitionName", "공모전이름"], "이름 없는 공모전"),
-    date: firstText(raw, ["date", "period", "applicationDate", "applicationPeriod", "deadline", "dueDate", "startDate", "endDate", "신청날짜"], "일정 미정"),
+    name: firstText(raw, ["name", "title", "contestName", "competitionName", "공모전이름", "공모전명"], "이름 없는 공모전"),
+    date: firstText(raw, ["date", "period", "applicationDate", "applicationPeriod", "deadline", "dueDate", "startDate", "endDate", "신청날짜", "신청기간"], "일정 미정"),
     reason: firstText(raw, ["reason", "aiReason", "recommendReason", "recommendationReason", "description", "summary", "추천이유"], "AI 추천 이유가 아직 등록되지 않았어요."),
     poster: firstMedia(raw),
     links: normalizeLinks(raw),
@@ -196,8 +217,8 @@ export async function getContests(): Promise<ContestInfo[]> {
   try {
     await ensureFirebaseAuth();
     const collectionSnap = await getDocs(collection(db, "contests"));
-    const collectionItems = collectionSnap.docs.flatMap((snap) => extractContestDocs({ id: snap.id, ...snap.data() }, snap.id));
-    const usableItems = collectionItems.filter((item) => item.name && item.name !== "이름 없는 공모전");
+    const items = collectionSnap.docs.flatMap((snap) => extractContestDocs({ id: snap.id, ...snap.data() }, snap.id));
+    const usableItems = items.filter((item) => item.name && item.name !== "이름 없는 공모전");
     if (usableItems.length > 0) {
       writeLocal(STORAGE_KEY, usableItems);
       return usableItems;

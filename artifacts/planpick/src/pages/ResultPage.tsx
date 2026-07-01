@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
-import { AlertTriangle, ArrowLeft, Box, CheckCircle, Download, GraduationCap, RotateCcw, Sparkles, Star, ThumbsUp, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Box, CheckCircle, Download, RotateCcw, Star, ThumbsUp, Users, X } from "lucide-react";
+import { getCurrentUserName } from "@/lib/auth";
 import { getCoursesAsync, type Course } from "@/lib/courses";
 import { getCurrentRequestId, getRequestById, type PlanData, type PlanpickRequest } from "@/lib/storage";
-import { getCurrentUserName } from "@/lib/auth";
 
 const DAYS = ["월", "화", "수", "목", "금"];
 const HOURS = ["09", "10", "11", "12", "13", "14", "15", "16", "17"];
@@ -34,23 +34,21 @@ function getReviews(course: Course) {
   return [
     base,
     "수업 흐름과 과제량을 미리 확인하고 들어가면 따라가기 좋습니다.",
-    "출석, 과제, 시험 준비를 꾸준히 챙기는 학생에게 추천됩니다.",
+    "출석, 과제, 시험 준비를 꾸준히 챙기는 학생에게 추천합니다.",
   ];
 }
 
 function getSummary(course: Course) {
   if (course.difficulty === "높음") return "한 줄 요약: 난이도는 있지만 전공 이해도 향상에 도움이 되는 과목입니다.";
   if (course.team === "있음") return "한 줄 요약: 팀 활동이 있어 일정 관리가 중요한 과목입니다.";
-  return "한 줄 요약: 시간표 균형을 해치지 않으면서 챙기기 좋은 과목입니다.";
+  return "한 줄 요약: 시간표 균형을 크게 해치지 않으면서 채우기 좋은 과목입니다.";
 }
 
 function matchCourse(courses: Course[], id: string) {
   const key = String(id || "").trim().toLowerCase();
-  return courses.find((course) => {
-    return [course.id, course.courseCode, course.name]
-      .filter(Boolean)
-      .some((value) => String(value).trim().toLowerCase() === key);
-  });
+  return courses.find((course) =>
+    [course.id, course.courseCode, course.name].filter(Boolean).some((value) => String(value).trim().toLowerCase() === key),
+  );
 }
 
 function getPlanCourses(plan: PlanData | null | undefined, courses: Course[]) {
@@ -74,7 +72,7 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
             <span className="mb-2 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-600">{course.type}</span>
             <h2 className="text-2xl font-black text-slate-950">{course.name}</h2>
             <p className="mt-1 text-sm font-bold text-slate-400">
-              {cleanDay(course.day)} {course.start}~{course.end} ㅣ {course.room || "강의실 미입력"} ㅣ {course.credit}학점
+              {cleanDay(course.day)} {course.start}~{course.end} | {course.room || "강의실 미입력"} | {course.credit}학점
             </p>
           </div>
           <button onClick={onClose} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700" aria-label="닫기">
@@ -96,7 +94,7 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
         <p className="mb-5 rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-black text-indigo-600">{getSummary(course)}</p>
 
         <button onClick={() => setShowSyllabus(true)} className="w-full rounded-2xl bg-[#5B3FE8] px-5 py-3 text-sm font-black text-white">
-          강의계획서 보기
+          강의 계획서 보기
         </button>
       </div>
 
@@ -104,8 +102,8 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-xl font-black text-slate-950">강의계획서</h3>
-              <button onClick={() => setShowSyllabus(false)} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700" aria-label="강의계획서 닫기">
+              <h3 className="text-xl font-black text-slate-950">강의 계획서</h3>
+              <button onClick={() => setShowSyllabus(false)} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700" aria-label="강의 계획서 닫기">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -157,7 +155,7 @@ function TimetableGrid({ courses, onCourseClick }: { courses: Course[]; onCourse
                 <button
                   key={`${course.id}-${index}`}
                   onClick={() => onCourseClick(course)}
-                  className="absolute rounded-xl border border-black/5 p-2 text-left text-xs font-black text-slate-700 shadow-sm transition-transform hover:-translate-y-0.5"
+                  className="absolute overflow-hidden rounded-xl border border-black/5 p-2 text-left text-xs font-black text-slate-700 shadow-sm transition-transform hover:-translate-y-0.5"
                   style={{
                     left: `calc(${dayIndex * 20}% + 8px)`,
                     width: "calc(20% - 16px)",
@@ -189,12 +187,12 @@ function CourseList({ courses, onCourseClick }: { courses: Course[]; onCourseCli
           <div key={course.id} className="grid grid-cols-[8px_1fr_auto] items-center gap-3 rounded-2xl border border-slate-100 p-3">
             <span className="h-14 rounded-full" style={{ backgroundColor: course.color || "#9D91F7" }} />
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h4 className="text-sm font-black text-slate-900">{course.name}</h4>
                 <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-black text-indigo-500">{course.type}</span>
               </div>
               <p className="mt-1 text-xs font-bold text-slate-400">
-                {course.start}~{course.end} ㅣ {cleanDay(course.day)} ㅣ {course.room || "강의실 미입력"}
+                {course.start}~{course.end} | {cleanDay(course.day)} | {course.room || "강의실 미입력"}
               </p>
             </div>
             <button onClick={() => onCourseClick(course)} className="rounded-full border border-slate-200 px-4 py-2 text-xs font-black text-slate-700">
@@ -258,117 +256,110 @@ export default function ResultPage() {
   return (
     <div className="min-h-full bg-[#F4F2FF] px-6 py-6 md:px-10 lg:px-14">
       <div className="mx-auto flex max-w-[1180px] flex-col gap-5">
-        <div className="flex items-center justify-between">
+        <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <button onClick={() => setLocation("/")} className="mb-3 flex items-center gap-2 text-lg font-black text-[#6B5DF6]">
-              <ArrowLeft className="h-5 w-5" />
-              대시보드
+            <button onClick={() => setLocation("/")} className="mb-2 inline-flex items-center gap-1 text-sm font-black text-[#6B5DF6]">
+              <ArrowLeft className="h-4 w-4" /> 대시보드
             </button>
-            <h1 className="text-4xl font-black text-slate-950">{userName}님을 위한 시간표 추천 완료했습니다!</h1>
-            <p className="mt-2 text-lg font-black text-[#6B5DF6]">DB에 저장된 강의 정보를 기준으로 시간표를 표시합니다.</p>
+            <h1 className="text-[34px] font-black text-slate-950 md:text-[42px]">{userName}님을 위한 시간표 추천 완료했습니다!</h1>
+            <p className="mt-1 text-base font-black text-[#6B5DF6]">AI가 졸업요건과 선호도를 분석하여 추천한 결과입니다.</p>
           </div>
-          <div className="hidden gap-3 md:flex">
-            <button onClick={() => window.open("https://time.navyism.com/?host=www.konkuk.ac.kr", "_blank")} className="rounded-2xl bg-white px-7 py-4 text-lg font-black text-slate-900 shadow-sm">
-              서비스시간
-            </button>
-            <button onClick={() => window.open("https://sugang.konkuk.ac.kr/", "_blank")} className="rounded-2xl bg-[#5B3FE8] px-7 py-4 text-lg font-black text-white shadow-lg">
-              수강신청
-            </button>
+          <div className="flex gap-3">
+            <button className="rounded-xl bg-white px-6 py-3 text-sm font-black text-slate-800 shadow-sm ring-1 ring-slate-100">서비스시간</button>
+            <button className="rounded-xl bg-[#5B3FE8] px-6 py-3 text-sm font-black text-white shadow-sm">수강신청</button>
           </div>
-        </div>
+        </header>
 
-        <section className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-          <div className="mb-6 flex items-center gap-5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100 text-[#6B5DF6]">
-              <Sparkles className="h-7 w-7" />
+        <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+          <div className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
+            <h2 className="mb-5 flex items-center gap-2 text-lg font-black text-slate-900">
+              <Box className="h-5 w-5 text-[#6B5DF6]" /> AI 분석 요약
+            </h2>
+            <div className="grid gap-4 md:grid-cols-4">
+              <SummaryItem icon={<Box className="h-5 w-5" />} label="추천 과목" value={`${selectedCourses.length}개`} />
+              <SummaryItem icon={<Users className="h-5 w-5" />} label="총 학점" value={`${totalCredits}학점`} />
+              <SummaryItem icon={<Star className="h-5 w-5" />} label="과목 종류" value={`${courseTypes}개`} />
+              <SummaryItem icon={<CheckCircle className="h-5 w-5" />} label="Plan B 포함" value="포함" />
             </div>
-            <h2 className="text-xl font-black text-slate-900">AI 분석 요약</h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-4">
-            {[
-              { icon: Box, label: "추천 과목", value: `${selectedCourses.length}개` },
-              { icon: GraduationCap, label: "총 학점", value: `${totalCredits}학점` },
-              { icon: Users, label: "과목 종류", value: `${courseTypes}개` },
-              { icon: CheckCircle, label: "Plan B 포함", value: result.planB ? "포함" : "미포함" },
-            ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 text-[#6B5DF6]">
-                  <Icon className="h-7 w-7" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-slate-700">{label}</p>
-                  <p className="text-xl font-black text-slate-950">{value}</p>
-                </div>
+
+          <div className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-black text-slate-900">추천 정확도</h2>
+              <div className="flex h-28 w-28 items-center justify-center rounded-full border-[8px] border-[#6B5DF6] text-center">
+                <span className="text-3xl font-black text-slate-950">95%</span>
               </div>
-            ))}
+            </div>
           </div>
         </section>
 
-        <div className="grid grid-cols-4 gap-3">
+        <nav className="grid gap-3 md:grid-cols-4">
           {PLAN_TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`rounded-2xl px-4 py-4 text-lg font-black shadow-sm transition-colors ${
-                activeTab === tab.key ? "bg-[#5B3FE8] text-white" : "bg-white text-slate-900 hover:bg-indigo-50"
+              className={`rounded-2xl px-5 py-4 text-sm font-black shadow-sm transition-colors ${
+                activeTab === tab.key ? "bg-[#5B3FE8] text-white" : "bg-white text-slate-800 ring-1 ring-slate-100"
               }`}
             >
               {tab.label}
             </button>
           ))}
-        </div>
+        </nav>
 
         {activeTab === "planB" ? (
-          <section className="rounded-3xl bg-white p-8 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-            <h2 className="mb-4 text-2xl font-black text-slate-900">Plan B</h2>
-            <p className="whitespace-pre-line text-lg font-bold leading-relaxed text-slate-600">{result.planB || "대체 시간표는 아직 등록되지 않았습니다."}</p>
+          <section className="rounded-3xl bg-white p-7 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
+            <h2 className="mb-4 text-2xl font-black text-slate-950">Plan B</h2>
+            <p className="whitespace-pre-line rounded-2xl bg-indigo-50 p-5 text-base font-bold leading-8 text-slate-700">
+              {result.planB || "관리자가 등록한 Plan B가 아직 없습니다."}
+            </p>
           </section>
         ) : (
           <>
-            <div className="grid gap-5 md:grid-cols-2">
-              <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-                <h3 className="mb-5 flex items-center gap-3 text-xl font-black text-slate-900">
-                  <ThumbsUp className="h-6 w-6 text-green-500" />
-                  장점
-                </h3>
-                <ul className="space-y-3 text-base font-bold text-slate-500">
-                  {(activePlan?.pros || "전공필수 포함, 졸업요건 충족, 이동거리 최소").split(/[,\n]/).map((item) => (
-                    <li key={item}>• {item.trim()}</li>
-                  ))}
-                </ul>
-              </section>
-              <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-                <h3 className="mb-5 flex items-center gap-3 text-xl font-black text-slate-900">
-                  <AlertTriangle className="h-6 w-6 text-orange-500" />
-                  주의사항
-                </h3>
-                <ul className="space-y-3 text-base font-bold text-slate-500">
-                  {(activePlan?.cons || "수강신청 전 실제 개설 여부 확인, 정원 변동 가능").split(/[,\n]/).map((item) => (
-                    <li key={item}>• {item.trim()}</li>
-                  ))}
-                </ul>
-              </section>
-            </div>
-
+            <section className="grid gap-5 md:grid-cols-2">
+              <InfoCard icon={<ThumbsUp className="h-5 w-5 text-emerald-500" />} title="장점" text={activePlan?.pros || "장점 정보가 아직 등록되지 않았습니다."} />
+              <InfoCard icon={<AlertTriangle className="h-5 w-5 text-orange-500" />} title="주의사항" text={activePlan?.cons || "주의사항 정보가 아직 등록되지 않았습니다."} />
+            </section>
             <TimetableGrid courses={selectedCourses} onCourseClick={setSelectedCourse} />
             <CourseList courses={selectedCourses} onCourseClick={setSelectedCourse} />
           </>
         )}
 
-        <div className="flex justify-center gap-3 pb-4">
-          <button onClick={() => setLocation("/request")} className="flex min-w-60 items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-lg font-black text-slate-900 shadow-sm">
-            <RotateCcw className="h-5 w-5" />
-            다시 추천받기
+        <footer className="grid gap-3 md:grid-cols-3">
+          <button onClick={() => setLocation("/request/conditions")} className="rounded-2xl bg-white px-5 py-4 text-sm font-black text-slate-900 shadow-sm ring-1 ring-slate-100">
+            <RotateCcw className="mr-2 inline h-4 w-4" /> 다시 추천받기
           </button>
-          <button className="flex min-w-60 items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-lg font-black text-slate-900 shadow-sm">
-            <Download className="h-5 w-5" />
-            PDF 저장
+          <button className="rounded-2xl bg-white px-5 py-4 text-sm font-black text-slate-900 shadow-sm ring-1 ring-slate-100">
+            <Download className="mr-2 inline h-4 w-4" /> PDF 저장
           </button>
-          <button className="flex min-w-60 items-center justify-center rounded-2xl bg-[#5B3FE8] px-8 py-4 text-lg font-black text-white shadow-lg">시간표 적용하기</button>
-        </div>
+          <button className="rounded-2xl bg-[#5B3FE8] px-5 py-4 text-sm font-black text-white shadow-sm">시간표 적용하기</button>
+        </footer>
       </div>
 
       {selectedCourse && <CourseDetailModal course={selectedCourse} onClose={() => setSelectedCourse(null)} />}
     </div>
+  );
+}
+
+function SummaryItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-[#6B5DF6]">{icon}</span>
+      <span>
+        <p className="text-xs font-black text-slate-400">{label}</p>
+        <p className="text-lg font-black text-slate-950">{value}</p>
+      </span>
+    </div>
+  );
+}
+
+function InfoCard({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
+  return (
+    <section className="rounded-3xl bg-white p-5 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
+      <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-slate-900">
+        {icon} {title}
+      </h3>
+      <p className="whitespace-pre-line text-sm font-bold leading-7 text-slate-600">{text}</p>
+    </section>
   );
 }

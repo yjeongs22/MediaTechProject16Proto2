@@ -1,24 +1,48 @@
 import React, { useEffect, useState } from "react";
 import { ArrowUpRight, Award, BriefcaseBusiness, CalendarDays, GraduationCap, Link as LinkIcon, Sparkles } from "lucide-react";
-import { getContests, type ContestInfo } from "@/lib/contests";
 import { getCurrentUserName } from "@/lib/auth";
+import { getContests, type ContestInfo } from "@/lib/contests";
 
 const careerItems = [
-  { icon: BriefcaseBusiness, title: "채용 정보", text: "AI 서비스 기획 인턴, 데이터 분석 인턴, 프론트엔드 인턴 공고를 모아볼 예정이에요." },
-  { icon: GraduationCap, title: "자격증 정보", text: "ADsP, SQLD, 정보처리기사처럼 전공과 연결되는 자격증을 준비해요." },
-  { icon: Award, title: "추천 준비물", text: "포트폴리오 1장, GitHub 링크, 지원 동기 정리처럼 바로 챙길 수 있는 항목을 보여줘요." },
+  {
+    icon: BriefcaseBusiness,
+    title: "채용 정보",
+    text: "AI 서비스 기획 인턴, 데이터 분석 인턴, 프론트엔드 인턴 공고를 모아볼 예정이에요.",
+  },
+  {
+    icon: GraduationCap,
+    title: "자격증 정보",
+    text: "ADsP, SQLD, 정보처리기사처럼 전공과 연결되는 자격증을 준비해요.",
+  },
+  {
+    icon: Award,
+    title: "추천 준비물",
+    text: "포트폴리오 1개, GitHub 링크, 지원 동기 정리처럼 바로 채울 수 있는 항목을 보여줘요.",
+  },
 ];
 
 export default function ContestsPage() {
   const [contests, setContests] = useState<ContestInfo[]>([]);
   const [selected, setSelected] = useState<ContestInfo | null>(null);
+  const [loading, setLoading] = useState(true);
   const userName = getCurrentUserName() || "사용자";
 
   useEffect(() => {
-    getContests().then((items) => {
-      setContests(items);
-      setSelected(items[0] ?? null);
-    });
+    let alive = true;
+
+    getContests()
+      .then((items) => {
+        if (!alive) return;
+        setContests(items);
+        setSelected(items[0] ?? null);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   return (
@@ -33,9 +57,21 @@ export default function ContestsPage() {
             {userName}님을 위한 공모전 추천 완료했습니다!
           </h1>
           <p className="mt-3 max-w-2xl text-base font-bold text-slate-500">
-            Firebase DB에 등록된 공모전 포스터를 먼저 보여주고, 클릭하면 신청 날짜와 AI 추천 이유를 확인할 수 있어요.
+            Firebase DB에 등록된 공모전 포스터와 링크를 불러와 보여줘요. 포스터를 누르면 상세 정보가 아래에 열립니다.
           </p>
         </div>
+
+        {loading && (
+          <div className="rounded-3xl bg-white p-8 text-center text-lg font-black text-indigo-500 shadow-[0_12px_30px_rgba(48,43,99,0.08)]">
+            공모전 정보를 불러오는 중입니다...
+          </div>
+        )}
+
+        {!loading && contests.length === 0 && (
+          <div className="rounded-3xl bg-white p-8 text-center text-lg font-black text-slate-500 shadow-[0_12px_30px_rgba(48,43,99,0.08)]">
+            아직 등록된 공모전이 없습니다.
+          </div>
+        )}
 
         <div className="grid gap-5 lg:grid-cols-3">
           {contests.map((contest, index) => (
@@ -89,21 +125,27 @@ export default function ContestsPage() {
                   <p className="text-sm font-bold leading-relaxed text-slate-600">{selected.reason}</p>
                 </div>
                 <div className="grid gap-2">
-                  {selected.links.map((link, index) => (
-                    <a
-                      key={`${link.label}-${index}`}
-                      href={link.href || "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2 text-sm font-black text-slate-600 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-                    >
-                      <span className="flex items-center gap-2">
-                        <LinkIcon className="h-3.5 w-3.5" />
-                        {link.label || `링크 ${index + 1}`}
-                      </span>
-                      <ArrowUpRight className="h-4 w-4" />
-                    </a>
-                  ))}
+                  {selected.links.length > 0 ? (
+                    selected.links.map((link, index) => (
+                      <a
+                        key={`${link.label}-${index}`}
+                        href={link.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2 text-sm font-black text-slate-600 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                      >
+                        <span className="flex items-center gap-2">
+                          <LinkIcon className="h-3.5 w-3.5" />
+                          {link.label || `링크 ${index + 1}`}
+                        </span>
+                        <ArrowUpRight className="h-4 w-4" />
+                      </a>
+                    ))
+                  ) : (
+                    <p className="rounded-xl border border-slate-100 px-3 py-2 text-sm font-black text-slate-400">
+                      링크가 아직 등록되지 않았어요.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
