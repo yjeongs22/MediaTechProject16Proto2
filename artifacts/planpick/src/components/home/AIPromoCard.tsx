@@ -10,7 +10,7 @@ export function AIPromoCard() {
     <Card className="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
       <CardContent className="relative z-10 flex h-full items-center justify-between p-6 pb-[50px] pt-[50px] md:p-8 md:pb-[50px] md:pt-[50px]">
         <div className="max-w-[70%]">
-          <h3 className="mb-2 text-2xl font-bold" style={{ fontFamily: "PlanPickAggro", fontWeight: 500 }}>플랜픽 AI 시간표</h3>
+          <h3 className="mb-2 text-2xl font-bold" style={{ fontFamily: "PlanPickAggro", fontWeight:700 }}>플랜픽 AI 시간표</h3>
           <p className="mb-6 text-sm leading-relaxed text-indigo-100">학교, 학과, 학년 정보를 바탕으로 AI가 최적의 시간표를 추천합니다.</p>
           <button
             onClick={() => setLocation("/request")}
