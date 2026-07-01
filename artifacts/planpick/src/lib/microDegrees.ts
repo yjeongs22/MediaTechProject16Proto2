@@ -14,6 +14,9 @@ type Raw = Record<string, unknown>;
 const STORAGE_KEY = "planpickMicroDegrees";
 
 const COLLECTION_NAMES = [
+  "mds",
+  "md",
+  "MD",
   "microDegrees",
   "microdegrees",
   "microDegree",
@@ -24,9 +27,6 @@ const COLLECTION_NAMES = [
   "microDegreeRecommendations",
   "microdegreeRecommendations",
   "microDegreeRecommends",
-  "MD",
-  "md",
-  "mds",
   "microMajors",
   "microMajor",
   "majorDegrees",
@@ -122,7 +122,7 @@ function extractItems(data: Raw, fallbackId: string) {
   return [normalizeMicroDegree(data, fallbackId)];
 }
 
-async function withTimeout<T>(promise: Promise<T>, ms = 5000): Promise<T> {
+async function withTimeout<T>(promise: Promise<T>, ms = 2500): Promise<T> {
   return Promise.race([
     promise,
     new Promise<never>((_, reject) => {
