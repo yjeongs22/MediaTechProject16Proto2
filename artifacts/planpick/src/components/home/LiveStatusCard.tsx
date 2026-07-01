@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, CalendarCheck } from "lucide-react";
+import { Bell, BellOff, CalendarCheck } from "lucide-react";
 
 export function LiveStatusCard() {
   const [timeLeft, setTimeLeft] = useState({ hours: 12, minutes: 34, seconds: 56 });
+  const [alarmOn, setAlarmOn] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -28,12 +29,20 @@ export function LiveStatusCard() {
 
   return (
     <section className="flex h-48 flex-col rounded-[32px] border border-gray-100 bg-white p-6 shadow-sm">
-      <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="mb-5 flex items-center justify-between gap-3">
         <h3 className="whitespace-nowrap font-bold text-[#1F1543]">실시간 수강신청 현황</h3>
-        <button type="button" className="flex shrink-0 items-center gap-1 whitespace-nowrap text-xs text-gray-400 hover:text-[#5B4CF2]">
-          더보기 <ArrowRight className="h-3 w-3" />
+        <button
+          type="button"
+          onClick={() => setAlarmOn((value) => !value)}
+          className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+            alarmOn ? "bg-[#5B4CF2] text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:bg-[#E9E6FF] hover:text-[#5B4CF2]"
+          }`}
+        >
+          {alarmOn ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
+          {alarmOn ? "알림 옴" : "알림 안 옴"}
         </button>
       </div>
+
       <div className="flex flex-1 items-center gap-6 rounded-2xl bg-[#F8F9FE] p-4">
         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#E9E6FF] text-[#5B4CF2] shadow-sm">
           <CalendarCheck className="h-7 w-7" />
