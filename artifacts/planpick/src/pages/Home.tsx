@@ -3,7 +3,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { TimetableCard } from "@/components/home/TimetableCard";
 import { AIPromoCard } from "@/components/home/AIPromoCard";
 import { LiveStatusCard } from "@/components/home/LiveStatusCard";
-import { NoticesCard } from "@/components/home/NoticesCard";
+import { WeatherCard } from "@/components/home/WeatherCard";
 import { FeatureIcons } from "@/components/home/FeatureIcons";
 
 export default function Home() {
@@ -23,7 +23,7 @@ export default function Home() {
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
           <AIPromoCard />
           <LiveStatusCard />
-          <NoticesCard />
+          <WeatherCard />
         </div>
 
         <FeatureIcons />
