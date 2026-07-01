@@ -99,8 +99,8 @@ export function WeatherCard() {
   }, []);
 
   return (
-    <section className="flex h-48 flex-col rounded-[32px] border border-gray-100 bg-white p-6 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
+    <section className="flex h-48 flex-col overflow-hidden rounded-[32px] border border-gray-100 bg-white p-5 shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
         <div>
           <h3 className="font-bold text-[#1F1543]">지역별 날씨</h3>
           <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-gray-400">
@@ -118,26 +118,26 @@ export function WeatherCard() {
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col justify-between rounded-2xl bg-gradient-to-br from-[#F2EFFF] to-white p-4">
+      <div className="flex min-h-0 flex-1 items-center justify-between gap-3 rounded-2xl bg-gradient-to-br from-[#F2EFFF] to-white p-4">
         <div className="flex items-start justify-between">
-          <CloudSun className="h-9 w-9 text-[#5B4CF2]" />
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#5B4CF2] shadow-sm">{summary}</span>
+          <CloudSun className="h-8 w-8 text-[#5B4CF2]" />
         </div>
 
         {weather.error ? (
-          <p className="mt-3 text-sm font-bold text-gray-500">{weather.error}</p>
+          <p className="text-sm font-bold text-gray-500">{weather.error}</p>
         ) : (
-          <div className="mt-3">
-            <div className="text-4xl font-black text-[#1F1543]">
+          <div className="min-w-0 flex-1">
+            <div className="whitespace-nowrap text-3xl font-black text-[#1F1543]">
               {weather.temperature === null ? "--" : weather.temperature}
-              <span className="text-xl">°C</span>
+              <span className="text-lg">°C</span>
             </div>
-            <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-bold text-gray-500">
+            <div className="mt-2 grid grid-cols-2 gap-2 whitespace-nowrap text-[11px] font-bold text-gray-500">
               <span>습도 {weather.humidity ?? "--"}%</span>
               <span>바람 {weather.wind ?? "--"}km/h</span>
             </div>
           </div>
         )}
+        <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#5B4CF2] shadow-sm">{summary}</span>
       </div>
     </section>
   );
