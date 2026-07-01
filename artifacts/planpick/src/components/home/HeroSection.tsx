@@ -12,13 +12,13 @@ export function HeroSection() {
         <span>SMART COURSE PLANNING</span>
       </div>
       <h1 className="mb-6 text-5xl font-extrabold leading-[1.2] tracking-tight text-[#1F1543] lg:text-6xl">
-        스마트한
+        더 스마트한
         <br />
         <span className="text-[#5B4CF2]" style={{ fontFamily: "PlanPickAggro" }}>
           수강신청,
         </span>
         <br />
-        AI가 챙기기
+        더 완벽한 학기
       </h1>
       <p className="mb-10 max-w-md text-base leading-relaxed text-gray-500">
         AI가 당신의 졸업요건과 선호도를 분석하여
