@@ -265,8 +265,8 @@ export default function ResultPage() {
             <p className="mt-1 text-base font-black text-[#6B5DF6]">AI가 졸업요건과 선호도를 분석하여 추천한 결과입니다.</p>
           </div>
           <div className="flex gap-3">
-            <button className="rounded-xl bg-white px-6 py-3 text-sm font-black text-slate-800 shadow-sm ring-1 ring-slate-100">서비스시간</button>
-            <button className="rounded-xl bg-[#5B3FE8] px-6 py-3 text-sm font-black text-white shadow-sm">수강신청</button>
+            <a href="https://time.navyism.com/?host=www.konkuk.ac.kr" className="rounded-xl bg-white px-6 py-3 text-sm font-black text-slate-800 shadow-sm ring-1 ring-slate-100">서비스시간</a>
+            <a href="https://sugang.konkuk.ac.kr/" className="rounded-xl bg-[#5B3FE8] px-6 py-3 text-sm font-black text-white shadow-sm">수강신청</a>
           </div>
         </header>
 
