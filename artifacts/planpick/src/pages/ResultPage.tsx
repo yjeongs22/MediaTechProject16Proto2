@@ -261,7 +261,7 @@ export default function ResultPage() {
             <button onClick={() => setLocation("/")} className="mb-2 inline-flex items-center gap-1 text-sm font-black text-[#6B5DF6]">
               <ArrowLeft className="h-4 w-4" /> 대시보드
             </button>
-            <h1 className="text-[34px] font-black text-slate-950 md:text-[42px]">{userName}님을 위한 시간표 추천 완료했습니다!</h1>
+            <h1 className="text-[34px] font-black text-slate-950 md:text-[42px]" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>{userName}님을 위한 시간표 추천 완료했습니다!</h1>
             <p className="mt-1 text-base font-black text-[#6B5DF6]">AI가 졸업요건과 선호도를 분석하여 추천한 결과입니다.</p>
           </div>
           <div className="flex gap-3">
