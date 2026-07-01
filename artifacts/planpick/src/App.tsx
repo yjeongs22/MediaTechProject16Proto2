@@ -10,6 +10,7 @@ import NeedsPage from "@/pages/NeedsPage";
 import WaitingPage from "@/pages/WaitingPage";
 import ResultPage from "@/pages/ResultPage";
 import ContestsPage from "@/pages/ContestsPage";
+import ContestWaitingPage from "@/pages/ContestWaitingPage";
 import AuthPage from "@/pages/AuthPage";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
@@ -74,6 +75,7 @@ function Layout() {
             <Route path="/request/waiting" component={WaitingPage} />
             <Route path="/request" component={RequestPage} />
             <Route path="/results" component={ResultPage} />
+            <Route path="/contests/waiting" component={ContestWaitingPage} />
             <Route path="/contests" component={ContestsPage} />
             <Route component={NotFound} />
           </Switch>
