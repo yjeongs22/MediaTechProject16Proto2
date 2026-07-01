@@ -20,29 +20,39 @@ export function Sidebar() {
   }
 
   return (
-    <div className="fixed left-0 top-0 z-50 flex h-full w-[60px] flex-col items-center border-r border-border bg-white py-4">
-      <div className="mt-4 flex w-full flex-col items-center gap-5">
-        {NAV_ITEMS.map(({ icon: Icon, href, label }) => (
-          <Link key={label} href={href}>
-            <div
-              title={label}
-              data-testid={`nav-${label}`}
-              className={`cursor-pointer rounded-full p-3 transition-colors ${
-                isActive(href) ? "bg-indigo-100 text-indigo-600" : "text-muted-foreground hover:bg-slate-100"
-              }`}
-            >
-              <Icon className="h-5 w-5" />
-            </div>
-          </Link>
-        ))}
+    <aside className="fixed left-0 top-0 z-50 flex h-full w-20 shrink-0 flex-col items-center bg-white py-6 shadow-[2px_0_10px_rgba(0,0,0,0.02)]">
+      <div className="flex w-full flex-1 flex-col items-center gap-4">
+        {NAV_ITEMS.map(({ icon: Icon, href, label }) => {
+          const active = isActive(href);
+          return (
+            <Link key={label} href={href}>
+              <div
+                title={label}
+                data-testid={`nav-${label}`}
+                className={`group flex w-full cursor-pointer flex-col items-center gap-1 py-2 transition-colors hover:bg-gray-50 ${
+                  active ? "text-[#5B4CF2]" : "text-gray-400"
+                }`}
+              >
+                <span
+                  className={`flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${
+                    active ? "bg-[#5B4CF2] text-white shadow-[0_4px_20px_-2px_rgba(91,76,242,0.28)]" : "group-hover:text-[#5B4CF2]"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className={`mt-1 text-[10px] font-semibold ${active ? "text-[#5B4CF2]" : "text-gray-500"}`}>{label}</span>
+              </div>
+            </Link>
+          );
+        })}
       </div>
-      <div className="mb-4 mt-auto">
-        <Link href="/settings">
-          <div title="설정" data-testid="nav-settings" className="cursor-pointer rounded-full p-3 text-muted-foreground transition-colors hover:bg-slate-100">
-            <Settings className="h-5 w-5" />
-          </div>
-        </Link>
-      </div>
-    </div>
+
+      <Link href="/settings">
+        <div title="설정" data-testid="nav-settings" className="group flex w-full cursor-pointer flex-col items-center gap-1 py-2 text-gray-400 transition-colors hover:bg-gray-50">
+          <Settings className="h-5 w-5 group-hover:text-[#5B4CF2]" />
+          <span className="mt-1 text-[10px] font-semibold text-gray-500">설정</span>
+        </div>
+      </Link>
+    </aside>
   );
 }

@@ -65,7 +65,7 @@ function Layout() {
   return (
     <div className="flex min-h-screen bg-[#F0F2F8]">
       <Sidebar />
-      <div className="flex-1 ml-[60px] flex flex-col min-h-screen">
+      <div className="ml-20 flex min-h-screen flex-1 flex-col">
         <TopNav />
         <main className="flex-1 overflow-x-hidden">
           <Switch>
