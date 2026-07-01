@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Calendar, Bell, BellOff } from "lucide-react";
+import { ArrowRight, Bell, BellOff, Calendar } from "lucide-react";
 
 export function LiveStatusCard() {
   const [timeLeft, setTimeLeft] = useState({ hours: 12, minutes: 34, seconds: 56 });
@@ -8,7 +8,7 @@ export function LiveStatusCard() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         let { hours, minutes, seconds } = prev;
         seconds -= 1;
         if (seconds < 0) {
@@ -28,56 +28,61 @@ export function LiveStatusCard() {
     return () => clearInterval(timer);
   }, []);
 
-  const formatNumber = (num: number) => num.toString().padStart(2, '0');
+  const formatNumber = (num: number) => num.toString().padStart(2, "0");
 
   return (
-    <Card className="border border-slate-100 shadow-sm rounded-2xl h-full">
-      <CardContent className="p-5 flex flex-col h-full">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center">
-              <Calendar className="w-4 h-4 text-indigo-600" />
+    <Card className="h-full rounded-2xl border border-slate-100 shadow-sm">
+      <CardContent className="flex h-full flex-col p-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-50">
+              <Calendar className="h-4 w-4 text-indigo-600" />
             </div>
-            <h3 className="text-base font-bold text-slate-800">실시간 수강신청 현황</h3>
+            <h3 className="text-base font-bold leading-snug text-slate-800">실시간 수강신청 현황</h3>
           </div>
-          <button className="text-xs text-slate-500 hover:text-indigo-600 flex items-center transition-colors" data-testid="link-status-more">
-            더보기 <ArrowRight className="w-3 h-3 ml-1" />
+          <button className="flex shrink-0 items-center whitespace-nowrap text-xs text-slate-500 transition-colors hover:text-indigo-600" data-testid="link-status-more">
+            더보기
+            <ArrowRight className="ml-1 h-3 w-3" />
           </button>
         </div>
 
-        <div className="bg-slate-50 rounded-xl p-5 flex-1 flex flex-col items-center justify-center border border-slate-100">
-          <div className="text-slate-500 text-sm font-medium mb-3">신청 시작까지</div>
-          <div className="flex items-center gap-2 text-3xl font-bold text-slate-800 tabular-nums tracking-tight">
+        <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50 p-5">
+          <div className="mb-3 text-sm font-medium text-slate-500">신청 시작까지</div>
+          <div className="flex items-center gap-2 text-3xl font-bold tracking-tight text-slate-800 tabular-nums">
             <div className="flex flex-col items-center">
               <span>{formatNumber(timeLeft.hours)}</span>
-              <span className="text-[10px] text-slate-400 font-normal mt-1">시간</span>
+              <span className="mt-1 text-[10px] font-normal text-slate-400">시간</span>
             </div>
-            <span className="text-slate-300 pb-4">:</span>
+            <span className="pb-4 text-slate-300">:</span>
             <div className="flex flex-col items-center">
               <span>{formatNumber(timeLeft.minutes)}</span>
-              <span className="text-[10px] text-slate-400 font-normal mt-1">분</span>
+              <span className="mt-1 text-[10px] font-normal text-slate-400">분</span>
             </div>
-            <span className="text-slate-300 pb-4">:</span>
+            <span className="pb-4 text-slate-300">:</span>
             <div className="flex flex-col items-center text-indigo-600">
               <span>{formatNumber(timeLeft.seconds)}</span>
-              <span className="text-[10px] text-slate-400 font-normal mt-1">초</span>
+              <span className="mt-1 text-[10px] font-normal text-slate-400">초</span>
             </div>
           </div>
         </div>
 
         <button
           onClick={() => setAlarmOn((v) => !v)}
-          className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
+          className={`mt-4 flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all ${
             alarmOn
-              ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
-              : "bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600"
+              ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
+              : "border-slate-200 bg-white text-slate-600 hover:border-indigo-400 hover:text-indigo-600"
           }`}
           data-testid="btn-alarm-toggle"
         >
           {alarmOn ? (
-            <><Bell className="w-4 h-4" /> 알람 설정됨</>
+            <>
+              <Bell className="h-4 w-4" /> 알림 설정됨
+            </>
           ) : (
-            <><BellOff className="w-4 h-4" /> 수강신청 시작 알람 받기</>
+            <>
+              <BellOff className="h-4 w-4" /> 수강신청 시작 알림 받기
+            </>
           )}
         </button>
       </CardContent>
