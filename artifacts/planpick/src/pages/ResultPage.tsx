@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
-import { AlertTriangle, ArrowLeft, Box, CheckCircle, Download, RotateCcw, Star, ThumbsUp, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Box, CheckCircle, Download, Minus, Plus, RotateCcw, Star, ThumbsUp, Users, X } from "lucide-react";
 import { getCurrentUserName } from "@/lib/auth";
 import { getCoursesAsync, type Course, type CourseSchedule } from "@/lib/courses";
 import { getCurrentRequestId, getRequestById, type PlanData, type PlanpickRequest } from "@/lib/storage";
@@ -76,6 +76,7 @@ function getPlanCourses(plan: PlanData | null | undefined, courses: Course[]) {
 
 function CourseDetailModal({ course, onClose }: { course: Course; onClose: () => void }) {
   const [showSyllabus, setShowSyllabus] = useState(false);
+  const [syllabusZoom, setSyllabusZoom] = useState(1);
   const reviews = getReviews(course);
   const syllabus = course.syllabus?.trim();
   const syllabusImage = course.syllabusImageDataUrl?.trim();
@@ -119,13 +120,41 @@ function CourseDetailModal({ course, onClose }: { course: Course; onClose: () =>
           <div className="max-h-[88vh] w-full max-w-3xl overflow-hidden rounded-3xl bg-white p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-black text-slate-950">강의 계획서</h3>
-              <button onClick={() => setShowSyllabus(false)} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700" aria-label="강의 계획서 닫기">
-                <X className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                {syllabusImage && (
+                  <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setSyllabusZoom((value) => Math.max(0.75, value - 0.25))}
+                      className="rounded-full p-1.5 text-slate-500 hover:bg-white hover:text-slate-900"
+                      aria-label="강의 계획서 축소"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="w-12 text-center text-xs font-black text-slate-500">{Math.round(syllabusZoom * 100)}%</span>
+                    <button
+                      type="button"
+                      onClick={() => setSyllabusZoom((value) => Math.min(2.5, value + 0.25))}
+                      className="rounded-full p-1.5 text-slate-500 hover:bg-white hover:text-slate-900"
+                      aria-label="강의 계획서 확대"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+                <button onClick={() => setShowSyllabus(false)} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700" aria-label="강의 계획서 닫기">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
             <div className="max-h-[70vh] overflow-auto rounded-2xl bg-slate-50 p-5">
               {syllabusImage ? (
-                <img src={syllabusImage} alt={`${course.name} 강의 계획서`} className="mx-auto max-h-[68vh] w-auto max-w-full rounded-xl object-contain" />
+                <img
+                  src={syllabusImage}
+                  alt={`${course.name} 강의 계획서`}
+                  className="mx-auto max-w-none rounded-xl object-contain transition-transform"
+                  style={{ width: `${syllabusZoom * 100}%` }}
+                />
               ) : (
                 <p className="min-h-36 whitespace-pre-line text-sm font-bold leading-relaxed text-slate-600">
                   {syllabus || "아직 등록되지 않았습니다."}
