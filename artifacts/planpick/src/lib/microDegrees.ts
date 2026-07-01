@@ -7,6 +7,9 @@ export interface MicroDegreeInfo {
   summary: string;
   reason: string;
   courses: string[];
+  universities?: string[];
+  area?: string;
+  level?: string;
 }
 
 type Raw = Record<string, unknown>;
@@ -120,6 +123,7 @@ function groupMicroDegreeRows(rows: Raw[]): MicroDegreeInfo[] {
     const courses = Array.from(new Set(items.map((item) => firstText(item, ["courseName", "courses", "courseNames"], "")).filter(Boolean)));
     const universities = Array.from(new Set(items.map((item) => firstText(item, ["university"], "")).filter(Boolean)));
     const area = firstText(first, ["area"], "");
+    const level = firstText(first, ["level"], "");
     const competency = firstText(first, ["competency", "summary", "description"], "");
 
     return {
@@ -128,6 +132,9 @@ function groupMicroDegreeRows(rows: Raw[]): MicroDegreeInfo[] {
       summary: competency || `${universities.join(", ")} ${area}`.trim() || "추천 시간표와 잘 맞는 마이크로디그리입니다.",
       reason: competency || "현재 추천 과목과 연계성이 높아요.",
       courses,
+      universities,
+      area,
+      level,
     };
   });
 }
@@ -165,7 +172,7 @@ function usableItems(items: MicroDegreeInfo[]) {
 }
 
 export async function getMicroDegrees(): Promise<MicroDegreeInfo[]> {
-  await ensureFirebaseAuth();
+  void ensureFirebaseAuth();
 
   for (const docId of LEGACY_DOC_IDS) {
     try {
