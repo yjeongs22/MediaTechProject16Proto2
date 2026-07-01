@@ -9,9 +9,9 @@ const NAV_LINKS = [
   { label: "대시보드", href: "/" },
   { label: "수강신청", href: "/request" },
   { label: "시간표", href: "/results" },
-  { label: "졸업요건", href: "/" },
-  { label: "상담AI", href: "/" },
-  { label: "마이페이지", href: "/login" },
+  { label: "졸업요건", href: "/graduation" },
+  { label: "상담AI", href: "/chat" },
+  { label: "마이페이지", href: "/mypage" },
 ];
 
 export function TopNav() {
@@ -30,7 +30,7 @@ export function TopNav() {
 
   function isActive(href: string) {
     if (href === "/") return location === "/";
-    return location.startsWith(href);
+    return location === href || location.startsWith(`${href}/`);
   }
 
   function logout() {
@@ -63,12 +63,14 @@ export function TopNav() {
       </div>
 
       <div className="flex items-center gap-3">
-        <button className="relative rounded-full p-2 text-muted-foreground transition-colors hover:bg-slate-100" data-testid="btn-notifications">
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
-        </button>
+        <Link href="/notifications">
+          <button className="relative rounded-full p-2 text-muted-foreground transition-colors hover:bg-slate-100" data-testid="btn-notifications">
+            <Bell className="h-5 w-5" />
+            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
+          </button>
+        </Link>
 
-        <Link href="/login">
+        <Link href="/mypage">
           <div className="flex cursor-pointer items-center gap-2 rounded-full p-1 pr-2 transition-colors hover:bg-slate-50" data-testid="btn-profile">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-indigo-100 text-indigo-700">

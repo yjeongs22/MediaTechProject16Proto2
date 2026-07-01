@@ -5,10 +5,10 @@ import { Bell, BookOpen, CalendarDays, Home, Search, Settings, ShoppingCart } fr
 const NAV_ITEMS = [
   { icon: Home, href: "/", label: "홈" },
   { icon: CalendarDays, href: "/results", label: "내 시간표" },
-  { icon: BookOpen, href: "/request", label: "강의목록" },
-  { icon: Search, href: "/request", label: "과목검색" },
+  { icon: BookOpen, href: "/courses", label: "강의목록" },
+  { icon: Search, href: "/search", label: "과목검색" },
   { icon: ShoppingCart, href: "/request", label: "희망과목" },
-  { icon: Bell, href: "/", label: "알림" },
+  { icon: Bell, href: "/notifications", label: "알림" },
 ];
 
 export function Sidebar() {
@@ -16,7 +16,7 @@ export function Sidebar() {
 
   function isActive(href: string) {
     if (href === "/") return location === "/";
-    return location.startsWith(href);
+    return location === href || location.startsWith(`${href}/`);
   }
 
   return (
@@ -37,7 +37,7 @@ export function Sidebar() {
         ))}
       </div>
       <div className="mb-4 mt-auto">
-        <Link href="/">
+        <Link href="/settings">
           <div title="설정" data-testid="nav-settings" className="cursor-pointer rounded-full p-3 text-muted-foreground transition-colors hover:bg-slate-100">
             <Settings className="h-5 w-5" />
           </div>
