@@ -32,7 +32,7 @@ const COLLECTION_NAMES = [
   "majorDegrees",
 ];
 
-const LEGACY_DOC_IDS = [...COLLECTION_NAMES, "microDegreeList", "mdList"];
+const LEGACY_DOC_IDS = ["mds", "md", "MD", ...COLLECTION_NAMES, "microDegreeList", "mdList"];
 
 const DEFAULT_MICRO_DEGREES: MicroDegreeInfo[] = [
   {
@@ -62,7 +62,7 @@ function textFromValue(value: unknown): string {
   if (typeof value === "number") return String(value);
   if (value && typeof value === "object") {
     const raw = value as Raw;
-    return firstText(raw, ["name", "title", "value", "text", "label"], "");
+    return firstText(raw, ["name", "title", "microDegree", "courseName", "value", "text", "label"], "");
   }
   return "";
 }
@@ -81,6 +81,7 @@ function textArray(raw: Raw, keys: string[]) {
     if (Array.isArray(value)) {
       return value.map(textFromValue).filter(Boolean);
     }
+
     const text = textFromValue(value);
     if (text) {
       return text
@@ -92,24 +93,52 @@ function textArray(raw: Raw, keys: string[]) {
   return [];
 }
 
+function isPlainObject(value: unknown): value is Raw {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 function normalizeMicroDegree(raw: Raw, fallbackId: string): MicroDegreeInfo {
   return {
     id: firstText(raw, ["id", "mdId", "microDegreeId", "microdegreeId"], fallbackId),
-    name: firstText(raw, ["name", "title", "mdName", "microDegreeName", "microdegreeName", "마이크로디그리명", "MD명"], "마이크로디그리 추천"),
-    summary: firstText(raw, ["summary", "description", "intro", "desc", "oneLine", "shortDescription", "한줄요약", "요약"], "추천 시간표와 잘 맞는 마이크로디그리입니다."),
-    reason: firstText(raw, ["reason", "recommendReason", "aiReason", "recommendationReason", "추천이유", "추천 이유"], "현재 추천 과목과 연계성이 높아요."),
-    courses: textArray(raw, ["courses", "courseNames", "subjects", "subjectNames", "recommendedCourses", "classes", "과목", "추천과목"]),
+    name: firstText(raw, ["name", "title", "microDegree", "mdName", "microDegreeName", "microdegreeName", "마이크로디그리명", "MD명"], "마이크로디그리 추천"),
+    summary: firstText(raw, ["summary", "description", "intro", "desc", "competency", "oneLine", "shortDescription", "한줄요약", "요약"], "추천 시간표와 잘 맞는 마이크로디그리입니다."),
+    reason: firstText(raw, ["reason", "recommendReason", "aiReason", "recommendationReason", "competency", "area", "추천이유", "추천 이유"], "현재 추천 과목과 연계성이 높아요."),
+    courses: textArray(raw, ["courses", "courseNames", "courseName", "subjects", "subjectNames", "recommendedCourses", "classes", "과목", "추천과목"]),
   };
 }
 
-function isPlainObject(value: unknown): value is Raw {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+function groupMicroDegreeRows(rows: Raw[]): MicroDegreeInfo[] {
+  const grouped = new Map<string, Raw[]>();
+
+  rows.forEach((row) => {
+    const name = firstText(row, ["microDegree", "name", "title"], "마이크로디그리 추천");
+    grouped.set(name, [...(grouped.get(name) || []), row]);
+  });
+
+  return Array.from(grouped.entries()).map(([name, items]) => {
+    const first = items[0] || {};
+    const courses = Array.from(new Set(items.map((item) => firstText(item, ["courseName", "courses", "courseNames"], "")).filter(Boolean)));
+    const universities = Array.from(new Set(items.map((item) => firstText(item, ["university"], "")).filter(Boolean)));
+    const area = firstText(first, ["area"], "");
+    const competency = firstText(first, ["competency", "summary", "description"], "");
+
+    return {
+      id: firstText(first, ["id"], name),
+      name,
+      summary: competency || `${universities.join(", ")} ${area}`.trim() || "추천 시간표와 잘 맞는 마이크로디그리입니다.",
+      reason: competency || "현재 추천 과목과 연계성이 높아요.",
+      courses,
+    };
+  });
 }
 
 function extractItems(data: Raw, fallbackId: string) {
   for (const key of ["items", "microDegrees", "microdegrees", "mdRecommendations", "recommendations", "list", "data", "results"]) {
     const value = data[key];
     if (Array.isArray(value)) {
+      if (value.some((item) => isPlainObject(item) && typeof item.microDegree === "string")) {
+        return groupMicroDegreeRows(value as Raw[]);
+      }
       return value.map((item, index) => normalizeMicroDegree((item || {}) as Raw, `${fallbackId}-${index}`));
     }
   }
@@ -138,19 +167,6 @@ function usableItems(items: MicroDegreeInfo[]) {
 export async function getMicroDegrees(): Promise<MicroDegreeInfo[]> {
   await ensureFirebaseAuth();
 
-  for (const name of COLLECTION_NAMES) {
-    try {
-      const snap = await withTimeout(getDocs(collection(db, name)));
-      const items = usableItems(snap.docs.flatMap((item) => extractItems({ id: item.id, ...item.data() }, item.id)));
-      if (items.length > 0) {
-        writeLocal(STORAGE_KEY, items);
-        return items;
-      }
-    } catch (error) {
-      console.warn(`${name} collection read failed`, error);
-    }
-  }
-
   for (const docId of LEGACY_DOC_IDS) {
     try {
       const snap = await withTimeout(getDoc(doc(db, "planpickMvp", docId)));
@@ -163,6 +179,19 @@ export async function getMicroDegrees(): Promise<MicroDegreeInfo[]> {
       }
     } catch (error) {
       console.warn(`${docId} legacy read failed`, error);
+    }
+  }
+
+  for (const name of COLLECTION_NAMES) {
+    try {
+      const snap = await withTimeout(getDocs(collection(db, name)));
+      const items = usableItems(snap.docs.flatMap((item) => extractItems({ id: item.id, ...item.data() }, item.id)));
+      if (items.length > 0) {
+        writeLocal(STORAGE_KEY, items);
+        return items;
+      }
+    } catch (error) {
+      console.warn(`${name} collection read failed`, error);
     }
   }
 
