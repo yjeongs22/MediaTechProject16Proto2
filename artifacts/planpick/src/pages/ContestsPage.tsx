@@ -1,23 +1,41 @@
 import React, { useEffect, useState } from "react";
-import { ArrowUpRight, Award, BriefcaseBusiness, CalendarDays, GraduationCap, Link as LinkIcon, Sparkles } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Cloud, FilePenLine, Link as LinkIcon, Megaphone, Sparkles, UserRound } from "lucide-react";
 import { getCurrentUserName } from "@/lib/auth";
 import { getContests, type ContestInfo } from "@/lib/contests";
 
-const careerItems = [
+const jobTabs = ["전체", "추천 채용정보", "잡코리아 채용정보", "학교입력 채용정보"];
+
+const jobItems = [
   {
-    icon: BriefcaseBusiness,
-    title: "채용 정보",
-    text: "AI 서비스 기획 인턴, 데이터 분석 인턴, 프론트엔드 인턴 공고를 모아볼 예정이에요.",
+    icon: Megaphone,
+    iconClassName: "bg-blue-50 text-blue-600",
+    badgeClassName: "border-blue-500 text-blue-600",
+    title: "[에코마케팅] 클라우드 인프라 엔지니어 신입/경력 채용",
+    company: "에코마케팅",
+    meta: "정규직 | 서울 | 기타 사무원",
+    due: "D-12",
+    dueClassName: "text-blue-700",
   },
   {
-    icon: GraduationCap,
-    title: "자격증 정보",
-    text: "ADsP, SQLD, 정보처리기사처럼 전공과 연결되는 자격증을 준비해요.",
+    icon: Cloud,
+    iconClassName: "bg-blue-50 text-blue-600",
+    badgeClassName: "border-blue-500 text-blue-600",
+    title: "[파수 AI] 26년 2차 신입공채",
+    company: "파수 AI",
+    meta: "인턴 | 서울 | 기타 사무원",
+    due: "D-12",
+    dueClassName: "text-blue-700",
   },
   {
-    icon: Award,
-    title: "추천 준비물",
-    text: "포트폴리오 1개, GitHub 링크, 지원 동기 정리처럼 바로 채울 수 있는 항목을 보여줘요.",
+    icon: FilePenLine,
+    iconClassName: "bg-red-50 text-red-500",
+    badgeClassName: "border-red-500 text-red-500",
+    title: "[고려아연] 2026 고려아연 및 계열사 신입사원 채용",
+    company: "고려아연",
+    meta: "정규직 | 서울 | 기타 사무원",
+    due: "D-03",
+    dueClassName: "text-red-500",
+    date: "2026.06.30",
   },
 ];
 
@@ -150,17 +168,52 @@ export default function ContestsPage() {
         )}
 
         <section className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
-          <div className="mb-5">
-            <h2 className="text-xl font-black text-slate-900">진로 정보 미리보기</h2>
-            <p className="mt-1 text-sm font-bold text-slate-400">공지사항 카드처럼 가볍게 보여주는 정보 영역이에요.</p>
+          <div className="flex flex-wrap items-center gap-5 border-b-2 border-blue-600 pb-5">
+            <h2 className="mr-auto text-[34px] font-black text-slate-950 md:text-[42px]" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>
+              채용정보
+            </h2>
+            <button type="button" className="rounded-2xl bg-blue-700 px-8 py-4 text-lg font-black text-white shadow-[0_12px_24px_rgba(29,78,216,0.22)]">
+              더보기
+            </button>
+            <div className="flex flex-wrap items-center gap-7 text-base font-black text-slate-950 md:text-lg">
+              {jobTabs.map((tab, index) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className={`border-b-2 px-1 pb-2 ${index === 0 ? "border-blue-700 text-blue-700" : "border-transparent text-slate-950"}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {careerItems.map(({ icon: Icon, title, text }) => (
-              <div key={title} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                <Icon className="mb-3 h-6 w-6 text-indigo-500" />
-                <h3 className="mb-2 text-base font-black text-slate-800">{title}</h3>
-                <p className="text-sm font-bold leading-relaxed text-slate-500">{text}</p>
-              </div>
+
+          <div className="divide-y divide-slate-200">
+            {jobItems.map(({ icon: Icon, iconClassName, badgeClassName, title, company, meta, due, dueClassName, date }) => (
+              <button key={title} type="button" className="grid w-full gap-5 py-7 text-left md:grid-cols-[140px_1fr_auto] md:items-center">
+                <div className={`flex h-28 w-28 items-center justify-center rounded-3xl ${iconClassName}`}>
+                  <Icon className="h-14 w-14 stroke-[1.8]" />
+                </div>
+                <div>
+                  <span className={`mb-3 inline-flex rounded-lg border px-4 py-1 text-sm font-black ${badgeClassName}`}>&lt;학교&gt;</span>
+                  <h3 className="text-2xl font-black leading-tight text-slate-950 underline decoration-slate-950 underline-offset-4">{title}</h3>
+                  <p className="mt-3 text-base font-bold text-slate-400">
+                    {company} <span className="mx-2 text-slate-300">|</span> {meta}
+                  </p>
+                  <div className="mt-5 flex flex-wrap items-center gap-6 text-base font-black text-slate-950">
+                    <span className="inline-flex items-center gap-2">
+                      <UserRound className="h-5 w-5" />
+                      채용인원 <strong className="text-emerald-500">00</strong> 명
+                    </span>
+                    <span className="hidden h-6 w-px bg-slate-300 md:inline-block" />
+                    <span className="inline-flex items-center gap-2">
+                      <CalendarDays className="h-5 w-5" />
+                      마감일 <strong className={dueClassName}>{due}</strong>
+                    </span>
+                  </div>
+                </div>
+                {date && <time className="self-end text-right text-lg font-bold text-slate-700 md:self-auto">{date}</time>}
+              </button>
             ))}
           </div>
         </section>
