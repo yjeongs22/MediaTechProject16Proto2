@@ -2,19 +2,44 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { Award, BadgeCheck, BookOpenCheck, CalendarCheck, ChevronRight, GraduationCap, LogOut, Sparkles, UserRound } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
-import { getData, getRequestList, type PlanpickRequest, type StudentInfo } from "@/lib/storage";
+import { getCurrentRequestId, getData, getRequestList, type PlanpickRequest, type StudentInfo } from "@/lib/storage";
+
+function readLocalRequests() {
+  try {
+    const stored = JSON.parse(localStorage.getItem("planpickRequests") || "[]") as PlanpickRequest[];
+    const requests = Array.isArray(stored) ? stored : [];
+    const latest = JSON.parse(localStorage.getItem("planpickLatestRequest") || "null") as PlanpickRequest | null;
+    if (latest?.id && !requests.some((request) => request.id === latest.id)) requests.push(latest);
+    return requests;
+  } catch {
+    return [];
+  }
+}
+
+function sortRequests(requests: PlanpickRequest[]) {
+  return [...requests].sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+}
 
 export default function MyPage() {
   const user = getCurrentUser();
   const [student, setStudent] = useState<StudentInfo | null>(() => getData<StudentInfo>("planpickStudent"));
-  const [requests, setRequests] = useState<PlanpickRequest[]>([]);
+  const [requests, setRequests] = useState<PlanpickRequest[]>(() => sortRequests(readLocalRequests()));
 
   useEffect(() => {
     setStudent(getData<StudentInfo>("planpickStudent"));
-    getRequestList().then(setRequests);
+    const localRequests = sortRequests(readLocalRequests());
+    if (localRequests.length > 0) setRequests(localRequests);
+
+    getRequestList().then((dbRequests) => {
+      const merged = new Map<string, PlanpickRequest>();
+      localRequests.forEach((request) => merged.set(request.id, request));
+      dbRequests.forEach((request) => merged.set(request.id, request));
+      setRequests(sortRequests(Array.from(merged.values())));
+    });
   }, []);
 
-  const latestRequest = requests[0];
+  const currentRequestId = getCurrentRequestId();
+  const latestRequest = requests.find((request) => request.id === currentRequestId) ?? requests[0];
   const profileName = user?.name || user?.userId || "사용자";
   const completionRate = useMemo(() => {
     let score = 30;

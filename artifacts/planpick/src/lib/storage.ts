@@ -155,6 +155,7 @@ export async function getRequestList(): Promise<PlanpickRequest[]> {
 }
 
 export async function upsertRequest(request: PlanpickRequest): Promise<void> {
+  setData("planpickLatestRequest", request);
   const list = await getRequestList();
   const idx = list.findIndex((r) => r.id === request.id);
   if (idx >= 0) {
