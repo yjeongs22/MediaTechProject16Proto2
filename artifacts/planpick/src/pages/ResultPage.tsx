@@ -359,17 +359,18 @@ export default function ResultPage() {
   }, []);
 
   const result = request?.result;
+  const isPlanB = activeTab === "planB";
   const activePlan = activeTab !== "planB" ? result?.[activeTab] : null;
-  const selectedCourses = useMemo(() => getPlanCourses(activePlan, allCourses), [activePlan, allCourses]);
+  const selectedCourses = useMemo(() => (isPlanB ? [] : getPlanCourses(activePlan, allCourses)), [activePlan, allCourses, isPlanB]);
   const selectedMicroDegree = useMemo(() => {
-    if (microDegrees.length === 0) return null;
+    if (isPlanB || microDegrees.length === 0) return null;
     const courseNames = new Set(selectedCourses.map((course) => course.name));
     return [...microDegrees].sort((a, b) => {
       const aScore = a.courses.filter((course) => courseNames.has(course)).length;
       const bScore = b.courses.filter((course) => courseNames.has(course)).length;
       return bScore - aScore;
     })[0];
-  }, [microDegrees, selectedCourses]);
+  }, [isPlanB, microDegrees, selectedCourses]);
   const totalCredits = selectedCourses.reduce((sum, course) => sum + (course.credit || 0), 0);
   const courseTypes = new Set(selectedCourses.map((course) => course.type)).size;
 
@@ -423,19 +424,28 @@ export default function ResultPage() {
             <h2 className="mb-5 flex items-center gap-2 text-lg font-black text-slate-900">
               <Box className="h-5 w-5 text-[#6B5DF6]" /> AI 분석 요약
             </h2>
+            {isPlanB ? (
+              <div className="grid gap-4 md:grid-cols-4">
+                <SummaryItem icon={<Box className="h-5 w-5" />} label="분석 유형" value="보조안" />
+                <SummaryItem icon={<Users className="h-5 w-5" />} label="추천 기준" value="대체 전략" />
+                <SummaryItem icon={<Star className="h-5 w-5" />} label="활용 방식" value="예비 선택" />
+                <SummaryItem icon={<CheckCircle className="h-5 w-5" />} label="Plan B" value="확인 중" />
+              </div>
+            ) : (
             <div className="grid gap-4 md:grid-cols-4">
               <SummaryItem icon={<Box className="h-5 w-5" />} label="추천 과목" value={`${selectedCourses.length}개`} />
               <SummaryItem icon={<Users className="h-5 w-5" />} label="총 학점" value={`${totalCredits}학점`} />
               <SummaryItem icon={<Star className="h-5 w-5" />} label="과목 종류" value={`${courseTypes}개`} />
               <SummaryItem icon={<CheckCircle className="h-5 w-5" />} label="Plan B 포함" value="포함" />
             </div>
+            )}
           </div>
 
           <div className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-black text-slate-900">추천 정확도</h2>
               <div className="flex h-28 w-28 items-center justify-center rounded-full border-[8px] border-[#6B5DF6] text-center">
-                <span className="text-3xl font-black text-slate-950">95%</span>
+                <span className="text-3xl font-black text-slate-950">{isPlanB ? "B" : "95%"}</span>
               </div>
             </div>
           </div>
