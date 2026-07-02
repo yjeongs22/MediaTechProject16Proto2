@@ -12,6 +12,7 @@ type Certification = {
   tags: string[];
   summary: string;
   plan: string[];
+  link: string;
 };
 
 const CERTIFICATIONS: Certification[] = [
@@ -25,6 +26,7 @@ const CERTIFICATIONS: Certification[] = [
     tags: ["데이터베이스", "백엔드", "취업가산"],
     summary: "데이터베이스 과목을 듣고 있다면 가장 먼저 준비하기 좋은 실무형 자격증입니다.",
     plan: ["SQL 기본 문법 정리", "기출 3회독", "정규화/조인/트랜잭션 집중"],
+    link: "https://www.dataq.or.kr/www/main.do",
   },
   {
     id: "adsp",
@@ -36,6 +38,7 @@ const CERTIFICATIONS: Certification[] = [
     tags: ["AI", "분석", "통계기초"],
     summary: "AI와 데이터 분석 역량을 보여주기 좋은 자격증입니다.",
     plan: ["데이터 이해 파트 암기", "분석 기획 흐름 정리", "통계 용어와 기출 중심 학습"],
+    link: "https://www.dataq.or.kr/www/main.do",
   },
   {
     id: "engineer-info",
@@ -47,6 +50,7 @@ const CERTIFICATIONS: Certification[] = [
     tags: ["개발", "전공필수", "공기업"],
     summary: "개발 직무와 공기업 준비를 함께 고려할 때 활용도가 높은 대표 자격증입니다.",
     plan: ["필기 과목별 개념 정리", "실기 코드/약술형 대비", "시험 3주 전 기출 집중"],
+    link: "https://www.q-net.or.kr/crf005.do?id=crf00503&jmCd=1320",
   },
   {
     id: "gtq",
@@ -58,6 +62,7 @@ const CERTIFICATIONS: Certification[] = [
     tags: ["디자인", "포트폴리오", "실습형"],
     summary: "UX/UI나 콘텐츠 제작 포트폴리오와 함께 보여주기 좋은 실습형 자격증입니다.",
     plan: ["툴 단축키 숙달", "기출 이미지 재현", "시간 제한 모의 연습"],
+    link: "https://license.kpc.or.kr/nasec/qlfint/qlfint/selectGtqinfomg.do",
   },
 ];
 
@@ -114,12 +119,21 @@ export default function CertificationsPage() {
                       <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-[#6B5DF6]">{item.field}</span>
                     </div>
                     <p className="text-sm font-bold leading-relaxed text-slate-500">{item.summary}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
                       {item.tags.map((tag) => (
                         <span key={tag} className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">
                           #{tag}
                         </span>
                       ))}
+                      <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(event) => event.stopPropagation()}
+                        className="rounded-full bg-[#5B3FE8] px-3 py-1 text-xs font-black text-white"
+                      >
+                        바로가기
+                      </a>
                     </div>
                   </div>
                   <div className="flex flex-col items-end justify-between">
@@ -160,9 +174,9 @@ export default function CertificationsPage() {
                   </p>
                 ))}
               </div>
-              <button type="button" className="mt-5 w-full rounded-2xl bg-[#5B3FE8] px-5 py-3 text-sm font-black text-white shadow-sm">
-                학습 계획 세우기
-              </button>
+              <a href={selected.link} target="_blank" rel="noreferrer" className="mt-5 block w-full rounded-2xl bg-[#5B3FE8] px-5 py-3 text-center text-sm font-black text-white shadow-sm">
+                자격증 페이지로 이동
+              </a>
             </section>
           </aside>
         </section>
