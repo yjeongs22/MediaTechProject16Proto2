@@ -39,7 +39,7 @@ export default function ContestWaitingPage() {
   const statusText = useMemo(() => (complete ? "분석 완료" : "분석 진행중"), [complete]);
 
   useEffect(() => {
-    const duration = 20000;
+    const duration = 10000;
     const startedAt = Date.now();
     const timer = window.setInterval(() => {
       const elapsed = Date.now() - startedAt;
@@ -86,7 +86,7 @@ export default function ContestWaitingPage() {
             <h2 className="text-4xl font-black text-slate-950">공모전 및 대외활동을 분석하고 있어요.</h2>
             <p className="mt-4 text-lg font-bold leading-relaxed text-slate-400">
               잠시만 기다려 주세요.
-              <br />약 20초 정도 소요됩니다.
+              <br />약 10초 정도 소요됩니다.
             </p>
 
             <div className="mt-16 flex items-center gap-0">
