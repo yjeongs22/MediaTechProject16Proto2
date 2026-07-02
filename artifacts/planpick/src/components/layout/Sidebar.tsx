@@ -1,12 +1,11 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { Bell, BookOpen, CalendarDays, Home, Search, Settings, ShoppingCart } from "lucide-react";
+import { Bell, BookOpen, CalendarDays, Home, ShoppingCart } from "lucide-react";
 
 const NAV_ITEMS = [
   { icon: Home, href: "/", label: "홈" },
   { icon: CalendarDays, href: "/results", label: "내 시간표" },
   { icon: BookOpen, href: "/courses", label: "강의목록" },
-  { icon: Search, href: "/search", label: "과목검색" },
   { icon: ShoppingCart, href: "/request", label: "희망과목" },
   { icon: Bell, href: "/notifications", label: "알림" },
 ];
@@ -46,13 +45,6 @@ export function Sidebar() {
           );
         })}
       </div>
-
-      <Link href="/settings">
-        <div title="설정" data-testid="nav-settings" className="group flex w-full cursor-pointer flex-col items-center gap-1 py-2 text-gray-400 transition-colors hover:bg-gray-50">
-          <Settings className="h-5 w-5 group-hover:text-[#5B4CF2]" />
-          <span className="mt-1 text-[10px] font-semibold text-gray-500">설정</span>
-        </div>
-      </Link>
     </aside>
   );
 }

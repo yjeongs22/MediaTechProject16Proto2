@@ -47,7 +47,7 @@ jobs:
         run: |
           cd artifacts/planpick/dist/public
           touch .nojekyll
-          for route in contests contests/waiting results request request/needs request/waiting login mypage notifications graduation certifications scholarships chat courses search settings; do
+          for route in contests contests/waiting results request request/needs request/waiting login mypage notifications graduation certifications scholarships chat courses; do
             mkdir -p "$route"
             cp index.html "$route/index.html"
           done
