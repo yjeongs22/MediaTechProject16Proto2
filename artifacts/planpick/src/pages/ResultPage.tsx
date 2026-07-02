@@ -257,6 +257,32 @@ function CourseList({ courses, onCourseClick }: { courses: Course[]; onCourseCli
   );
 }
 
+function AccuracyRing({ percent, label }: { percent: number; label: string }) {
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - Math.min(Math.max(percent, 0), 100) / 100);
+
+  return (
+    <div className="relative flex h-28 w-28 items-center justify-center text-center">
+      <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 112 112" aria-hidden="true">
+        <circle cx="56" cy="56" r={radius} fill="none" stroke="#EEF0F7" strokeWidth="8" />
+        <circle
+          cx="56"
+          cy="56"
+          r={radius}
+          fill="none"
+          stroke="#6B5DF6"
+          strokeWidth="8"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <span className="relative text-3xl font-black text-slate-950">{label}</span>
+    </div>
+  );
+}
+
 function MicroDegreeRecommendation({ userName, microDegree, allMicroDegrees }: { userName: string; microDegree: MicroDegreeInfo | null; allMicroDegrees: MicroDegreeInfo[] }) {
   const [showAll, setShowAll] = useState(false);
   if (!microDegree) return null;
@@ -444,9 +470,7 @@ export default function ResultPage() {
           <div className="rounded-3xl bg-white p-6 shadow-[0_12px_30px_rgba(48,43,99,0.08)] ring-1 ring-slate-100">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-black text-slate-900">추천 정확도</h2>
-              <div className="flex h-28 w-28 items-center justify-center rounded-full border-[8px] border-[#6B5DF6] text-center">
-                <span className="text-3xl font-black text-slate-950">{isPlanB ? "B" : "95%"}</span>
-              </div>
+              <AccuracyRing percent={isPlanB ? 0 : 95} label={isPlanB ? "B" : "95%"} />
             </div>
           </div>
         </section>
