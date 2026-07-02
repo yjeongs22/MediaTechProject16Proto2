@@ -406,7 +406,7 @@ export default function ResultPage() {
             <h1 className="text-[34px] font-black text-slate-950 md:text-[42px]" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>
               {userName}님을 위한 시간표 추천 완료했습니다!
             </h1>
-            <p className="mt-1 text-base font-black text-[#6B5DF6]">AI가 졸업요건과 선호도를 분석하여 추천한 결과입니다.</p>
+            <p className="mt-1 text-base font-black" style={{ color: "#6B5DF6" }}>AI가 졸업요건과 선호도를 분석하여 추천한 결과입니다.</p>
           </div>
           <div className="flex gap-3">
             <a href="https://time.navyism.com/?host=www.konkuk.ac.kr" className="rounded-xl bg-white px-6 py-3 text-sm font-black text-slate-800 shadow-sm ring-1 ring-slate-100">
