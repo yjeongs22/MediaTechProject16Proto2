@@ -15,6 +15,7 @@ import ScholarshipsPage from "@/pages/ScholarshipsPage";
 import CertificationsPage from "@/pages/CertificationsPage";
 import MyPage from "@/pages/MyPage";
 import NotificationsPage from "@/pages/NotificationsPage";
+import CoursesPage from "@/pages/CoursesPage";
 import AuthPage from "@/pages/AuthPage";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
@@ -85,6 +86,7 @@ function Layout() {
             <Route path="/scholarships" component={ScholarshipsPage} />
             <Route path="/mypage" component={MyPage} />
             <Route path="/notifications" component={NotificationsPage} />
+            <Route path="/courses" component={CoursesPage} />
             <Route component={NotFound} />
           </Switch>
         </main>
