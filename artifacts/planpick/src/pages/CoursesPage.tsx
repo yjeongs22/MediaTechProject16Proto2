@@ -47,7 +47,7 @@ export default function CoursesPage() {
             <h1 className="text-[34px] font-black text-slate-950 md:text-[42px]" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>
               강의목록
             </h1>
-            <p className="mt-2 text-base font-bold text-slate-400">DB에 등록된 과목, 시간, 학점, 강의평을 한 번에 확인해요.</p>
+            <p className="mt-2 text-base font-bold text-slate-400">과목, 시간, 학점, 강의평을 한 번에 확인해요.</p>
           </div>
           <div className="flex min-w-[280px] items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-100">
             <Search className="h-5 w-5 text-slate-300" />
