@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { label: "대시보드", href: "/" },
   { label: "수강신청", href: "/request" },
   { label: "시간표", href: "/results" },
-  { label: "졸업요건", href: "/graduation" },
+  { label: "자격증", href: "/certifications" },
   { label: "장학금", href: "/scholarships" },
   { label: "마이페이지", href: "/mypage" },
 ];
