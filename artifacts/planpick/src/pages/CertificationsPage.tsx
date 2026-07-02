@@ -89,7 +89,7 @@ export default function CertificationsPage() {
             <h1 className="text-[34px] font-black text-slate-950 md:text-[42px]" style={{ fontFamily: "PlanPickAggro", fontWeight: 900 }}>
               {userName}님을 위한 자격증 추천
             </h1>
-            <p className="mt-2 text-base font-bold text-slate-400">전공 과목, 진로 방향, 준비 난이도에 맞춰 추천 자격증을 정리했어요.</p>
+            <p className="mt-2 text-base font-bold text-slate-400 text-[#6B5DF6]">전공 과목, 진로 방향, 준비 난이도에 맞춰 추천 자격증을 정리했어요.</p>
           </div>
           <div className="flex min-w-[260px] items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-100">
             <Search className="h-5 w-5 text-slate-300" />
