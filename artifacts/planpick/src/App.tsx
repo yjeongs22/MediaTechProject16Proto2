@@ -13,6 +13,7 @@ import ContestsPage from "@/pages/ContestsPage";
 import ContestWaitingPage from "@/pages/ContestWaitingPage";
 import ScholarshipsPage from "@/pages/ScholarshipsPage";
 import CertificationsPage from "@/pages/CertificationsPage";
+import MyPage from "@/pages/MyPage";
 import AuthPage from "@/pages/AuthPage";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
@@ -81,6 +82,7 @@ function Layout() {
             <Route path="/contests" component={ContestsPage} />
             <Route path="/certifications" component={CertificationsPage} />
             <Route path="/scholarships" component={ScholarshipsPage} />
+            <Route path="/mypage" component={MyPage} />
             <Route component={NotFound} />
           </Switch>
         </main>
