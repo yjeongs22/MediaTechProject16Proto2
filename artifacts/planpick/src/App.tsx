@@ -11,6 +11,7 @@ import WaitingPage from "@/pages/WaitingPage";
 import ResultPage from "@/pages/ResultPage";
 import ContestsPage from "@/pages/ContestsPage";
 import ContestWaitingPage from "@/pages/ContestWaitingPage";
+import ScholarshipsPage from "@/pages/ScholarshipsPage";
 import AuthPage from "@/pages/AuthPage";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
@@ -77,6 +78,7 @@ function Layout() {
             <Route path="/results" component={ResultPage} />
             <Route path="/contests/waiting" component={ContestWaitingPage} />
             <Route path="/contests" component={ContestsPage} />
+            <Route path="/scholarships" component={ScholarshipsPage} />
             <Route component={NotFound} />
           </Switch>
         </main>
